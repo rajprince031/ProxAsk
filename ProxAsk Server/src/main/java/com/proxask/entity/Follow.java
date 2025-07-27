@@ -1,25 +1,42 @@
 package com.proxask.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 
 @Entity
-@Table()
+@Table(name = "follows")
+@Data
 public class Follow {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     private Follow(){
-        this.id = generateId();
     }
 
-    @OneToMany
-    @JoinColumn(name = "follower_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "follower_id", nullable = false)
     private User follower;
 
-    private String generateId(){
-        return UUID.randomUUID().toString().replace("-", "");
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "following_id", nullable = false)
+    private User following;
+
+    public Follow(User follower, User following) {
+        this.follower = follower;
+        this.following = following;
     }
+
+    @CreationTimestamp
+    @JoinColumn(name = "followed_at")
+    private LocalDateTime followedAt;
+
 }

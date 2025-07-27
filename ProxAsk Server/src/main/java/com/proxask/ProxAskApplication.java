@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ProxaskApplication {
+public class ProxAskApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ProxaskApplication.class, args);
+		SpringApplication.run(ProxAskApplication.class, args);
 	}
 
 }

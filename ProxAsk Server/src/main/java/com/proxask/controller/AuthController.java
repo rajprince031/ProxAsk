@@ -4,10 +4,8 @@ import com.proxask.dto.UserDTO;
 import com.proxask.dto.auth.AuthResponse;
 import com.proxask.dto.auth.LoginRequest;
 import com.proxask.dto.auth.RegisterRequest;
-import com.proxask.entity.User;
-import com.proxask.service.authService.AuthService;
+import com.proxask.service.auth.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

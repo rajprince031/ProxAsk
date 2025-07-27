@@ -1,4 +1,4 @@
-package com.proxask.service.authService;
+package com.proxask.service.auth;
 
 import com.proxask.dto.UserDTO;
 import com.proxask.dto.auth.AuthResponse;
@@ -7,6 +7,8 @@ import com.proxask.dto.auth.RegisterRequest;
 import com.proxask.entity.User;
 import com.proxask.repository.UserRepository;
 import com.proxask.service.jwt.JWTService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +37,7 @@ public class AuthService {
     @Autowired
     private ModelMapper modelMapper;
 
+
     @Transactional
     public ResponseEntity<UserDTO> registerUser(RegisterRequest registerRequest){
         try {
@@ -44,6 +47,7 @@ public class AuthService {
             UserDTO userDTO = modelMapper.map(newUser, UserDTO.class);
             return ResponseEntity.ok(userDTO);
         }catch (Exception e){
+            System.out.println(e);
             return ResponseEntity
                     .internalServerError()
                     .body(new UserDTO());

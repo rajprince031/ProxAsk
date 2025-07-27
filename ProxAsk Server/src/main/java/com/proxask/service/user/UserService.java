@@ -1,14 +1,29 @@
-package com.proxask.service;
+package com.proxask.service.user;
 
+import com.proxask.dto.UserDTO;
+import com.proxask.dto.auth.AuthResponse;
 import com.proxask.dto.auth.LoginRequest;
 import com.proxask.dto.auth.RegisterRequest;
+import com.proxask.dto.question.QuestionDTO;
 import com.proxask.entity.User;
+import com.proxask.exception.ResourceNotFoundException;
 import com.proxask.repository.UserRepository;
+import com.proxask.service.jwt.JWTService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.swing.text.html.parser.Entity;
-import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
+
 
 @Service
 public class UserService {
@@ -16,19 +31,19 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    public User registerUser(RegisterRequest registerRequest){
-        User user = new User();
-        user.setFirstName(registerRequest.getFirstName());
-        user.setLastName(registerRequest.getLastName());
-        user.setUsername(registerRequest.getUsername());
-        user.setPassword(registerRequest.getPassword());
-        user.setBio(registerRequest.getBio());
-        user.setAvatar(registerRequest.getAvatar());
-        return userRepository.save(user);
+    @Autowired
+    private ModelMapper modelMapper;
+
+    public UserDTO getUserDetails(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() ->
+               new ResourceNotFoundException("User not found"));
+        return modelMapper.map(user, UserDTO.class);
     }
 
-    public Optional<User> registerUser(LoginRequest loginRequest){
-        return userRepository.findByUsername(loginRequest.getUsername());
+    public String getUserId(String username){
+        return userRepository.findByUsername(username).orElseThrow(() ->
+                new ResourceNotFoundException("User not found")
+        ).getId();
     }
 
 }

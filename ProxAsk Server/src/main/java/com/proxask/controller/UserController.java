@@ -1,6 +1,7 @@
 package com.proxask.controller;
 
 
+import com.proxask.dto.UserDTO;
 import com.proxask.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,9 +16,11 @@ public class UserController {
     private UserService userService;
 
     @GetMapping("/{username}")
-    public ResponseEntity<?> getUserDetails(@PathVariable String username){
-        return userService.getUserDetails(username);
+    public ResponseEntity<UserDTO> getUserDetails(@PathVariable String username){
+        UserDTO userDTO = userService.getUserDetails(username);
+        return ResponseEntity.ok(userDTO);
     }
+
 
     @GetMapping()
     public ResponseEntity<?> testing(){
