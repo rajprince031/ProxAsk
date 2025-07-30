@@ -5,10 +5,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/health-check")
 public class HeathCheck {
 
     @GetMapping
+    public String checkServer(){
+        return "Running fine";
+    }
+
+    @GetMapping("/health-check")
     public String checkingServer(){
         return "running fine";
     }

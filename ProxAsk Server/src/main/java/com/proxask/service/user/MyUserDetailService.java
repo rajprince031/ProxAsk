@@ -1,6 +1,7 @@
 package com.proxask.service.user;
 
 import com.proxask.entity.User;
+import com.proxask.exception.ResourceNotFoundException;
 import com.proxask.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,7 +18,8 @@ public class MyUserDetailService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username).orElseThrow();
+        User user = userRepository.findByUsername(username).orElseThrow(() ->
+                new ResourceNotFoundException("User not found"));
         return new UserPrinciple(user);
     }
 }

@@ -11,12 +11,13 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Data
-@ToString(exclude = {"sendQuestions","receiveQuestions"})
+@ToString(exclude = {"sendQuestions","receiveQuestions","followers","followings"})
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "user")
@@ -61,8 +62,10 @@ public class User {
     private List<Question> receiveQuestions = new ArrayList<>();
 
     @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Follow> followers =  new ArrayList<>();
 
     @OneToMany(mappedBy = "following", cascade = CascadeType.ALL)
-    private List<Follow> following = new ArrayList<>();
+    @JsonManagedReference
+    private List<Follow> followings = new ArrayList<>();
 }

@@ -16,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +46,24 @@ public class UserService {
         return userRepository.findByUsername(username).orElseThrow(() ->
                 new ResourceNotFoundException("User not found")
         ).getId();
+    }
+
+    public User getCurrentAuthenticatedUser(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+
+        Object principal = authentication.getPrincipal();
+        String username;
+        if (principal instanceof UserDetails) {
+            username =  ((UserDetails) principal).getUsername();
+        } else {
+            username =  principal.toString();
+        }
+        return userRepository.findByUsername(username).orElseThrow(() ->
+                new ResourceNotFoundException("User not found with username: " + username));
     }
 
 }
