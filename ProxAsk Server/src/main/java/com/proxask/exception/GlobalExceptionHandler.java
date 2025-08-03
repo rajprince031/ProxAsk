@@ -2,9 +2,7 @@ package com.proxask.exception;
 
 
 import com.proxask.dto.ErrorResponse;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -48,6 +46,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(FollowNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleFollowNotFoundException(FollowNotFoundException ex){
         return ResponseEntity.status(404).body(new ErrorResponse(ex.getMessage(), 404));
+    }
+
+    @ExceptionHandler(QuestionAlreadyAnsweredException.class)
+    public ResponseEntity<ErrorResponse> handleQuestionAlreadyAnsweredException(QuestionAlreadyAnsweredException ex){
+        return ResponseEntity.status(409).body(new ErrorResponse(ex.getMessage(), 409));
     }
 }
 

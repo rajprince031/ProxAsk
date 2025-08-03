@@ -5,6 +5,7 @@ import com.proxask.dto.question.QuestionDTO;
 import com.proxask.service.question.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/ask")
 public class QuestionController {
+
     @Autowired
     private QuestionService questionService;
 
@@ -29,8 +31,9 @@ public class QuestionController {
         return ResponseEntity.ok(questionDTOList);
     }
 
+    @PreAuthorize("@isAuth.hasQuestionPermission(#questionId, authentication)")
     @DeleteMapping("/{questionId}")
-    public ResponseEntity<QuestionDTO> deleteQuestion(@PathVariable String questionId, Authentication authentication) throws AccessDeniedException {
+    public ResponseEntity<QuestionDTO> deleteQuestion(@PathVariable String questionId, Authentication authentication) {
         QuestionDTO questionDTO =  questionService.deleteQuestionById(questionId, authentication);
         return ResponseEntity.ok(questionDTO);
     }
