@@ -1,13 +1,7 @@
 
-# 🟢 Proxask – Social Q&A and Chat Platform
+# 🟢 Proxask – Where questions meet conversations
 
-**Proxask** is a full-stack social web application that allows users to:
-- Create a profile
-- Receive anonymous questions from any visitor
-- Chat privately with other registered users
-- Build a follower base and receive notifications when new questions are asked
-
-This project is designed with scalability, security, and clean architecture in mind. It's perfect for learning full-stack development with a blend of relational and non-relational databases.
+**ProxAsk** is a social web application that lets users create profiles, receive anonymous questions, follow others, and chat in real time. With follower notifications and interactive Q&A features, it blends curiosity with connection in a secure and user-friendly way.
 
 ---
 
