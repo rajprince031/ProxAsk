@@ -6,6 +6,7 @@ import com.proxask.entity.User;
 import com.proxask.exception.ResourceNotFoundException;
 import com.proxask.repository.QuestionRepository;
 import com.proxask.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -15,17 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class QuestionService {
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final QuestionRepository questionRepository;
+    private final ModelMapper modelMapper;
 
-    @Autowired
-    private QuestionRepository questionRepository;
-
-    @Autowired
-    private ModelMapper modelMapper;
-
-    @Transactional
     public QuestionDTO postQuestion(QuestionDTO questionDTO, String receiverUsername){
         User receiver = userRepository
                 .findByUsername(receiverUsername)

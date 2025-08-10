@@ -5,6 +5,7 @@ import com.proxask.entity.Follow;
 import com.proxask.entity.User;
 import com.proxask.service.follow.FollowService;
 import com.proxask.service.user.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,13 +13,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 public class FollowController {
 
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private FollowService followService;
+    private final UserService userService;
+    private final FollowService followService;
 
     @PostMapping("/follow/{userId}")
     public ResponseEntity<String> followUSer(@PathVariable String userId){

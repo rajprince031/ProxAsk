@@ -6,9 +6,11 @@ import com.proxask.dto.auth.LoginRequest;
 import com.proxask.dto.auth.RegisterRequest;
 import com.proxask.entity.User;
 import com.proxask.repository.UserRepository;
+import com.proxask.service.OtpService;
 import com.proxask.service.jwt.JWTService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,23 +22,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private JWTService jwtService;
-
-    @Autowired
-    private ModelMapper modelMapper;
-
+    private final UserRepository userRepository;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JWTService jwtService;
+    private final ModelMapper modelMapper;
+    private final OtpService otpService;
 
     @Transactional
     public ResponseEntity<UserDTO> registerUser(RegisterRequest registerRequest){
@@ -45,6 +39,7 @@ public class AuthService {
             User user = modelMapper.map(registerRequest, User.class);
             User newUser = userRepository.save(user);
             UserDTO userDTO = modelMapper.map(newUser, UserDTO.class);
+            otpService.sendOtp(newUser);
             return ResponseEntity.ok(userDTO);
         }catch (Exception e){
             System.out.println(e);

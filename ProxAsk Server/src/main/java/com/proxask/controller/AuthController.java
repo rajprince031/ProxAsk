@@ -5,14 +5,15 @@ import com.proxask.dto.auth.AuthResponse;
 import com.proxask.dto.auth.LoginRequest;
 import com.proxask.dto.auth.RegisterRequest;
 import com.proxask.service.auth.AuthService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequiredArgsConstructor
 public class AuthController {
-    @Autowired
-    private AuthService authService;
+    private final AuthService authService;
 
     @PostMapping("/register")
     public ResponseEntity<UserDTO> registerUser(@RequestBody RegisterRequest registerRequest){

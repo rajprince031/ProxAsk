@@ -52,5 +52,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleQuestionAlreadyAnsweredException(QuestionAlreadyAnsweredException ex){
         return ResponseEntity.status(409).body(new ErrorResponse(ex.getMessage(), 409));
     }
+
+    @ExceptionHandler(VerificationException.class)
+    public ResponseEntity<ErrorResponse> handleTokenExpiredException(VerificationException ex){
+        return ResponseEntity.status(400).body(new ErrorResponse(ex.getMessage(), 400));
+    }
 }
 

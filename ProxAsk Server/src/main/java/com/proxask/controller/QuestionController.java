@@ -3,21 +3,21 @@ package com.proxask.controller;
 
 import com.proxask.dto.question.QuestionDTO;
 import com.proxask.service.question.QuestionService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.AccessDeniedException;
 import java.util.List;
 
 @RestController
 @RequestMapping("/ask")
+@RequiredArgsConstructor
 public class QuestionController {
 
-    @Autowired
-    private QuestionService questionService;
+    private final QuestionService questionService;
 
     @PostMapping("/{username}")
     public ResponseEntity<QuestionDTO> postQuestions(@RequestBody QuestionDTO question, @PathVariable String username){

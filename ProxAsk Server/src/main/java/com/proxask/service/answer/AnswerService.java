@@ -7,22 +7,18 @@ import com.proxask.exception.QuestionAlreadyAnsweredException;
 import com.proxask.exception.ResourceNotFoundException;
 import com.proxask.repository.AnswerRepository;
 import com.proxask.repository.QuestionRepository;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class AnswerService {
-
-    @Autowired
-    private AnswerRepository answerRepository;
-
-    @Autowired
-    private QuestionRepository questionRepository;
-
-    @Autowired
-    private ModelMapper modelMapper;
+    private final AnswerRepository answerRepository;
+    private final QuestionRepository questionRepository;
+    private final ModelMapper modelMapper;
 
     public AnswerDTO getAnswerByQuestionId(String questionId){
         Question question = questionRepository.findById(questionId).orElseThrow(() ->

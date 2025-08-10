@@ -1,19 +1,17 @@
 package com.proxask.security;
 
-import com.proxask.entity.Question;
 import com.proxask.exception.ResourceNotFoundException;
 import com.proxask.repository.QuestionRepository;
-import com.proxask.repository.UserRepository;
-import com.proxask.service.question.QuestionService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 @Component("isAuth")
+@RequiredArgsConstructor
 public class IsAuth {
 
-    @Autowired
-    private QuestionRepository questionRepository;
+    private final QuestionRepository questionRepository;
 
     public boolean isUserAuthenticated(Authentication authentication, String username){
         return authentication != null && authentication.getName().equals(username);

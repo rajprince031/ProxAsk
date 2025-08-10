@@ -10,6 +10,7 @@ import com.proxask.exception.ResourceNotFoundException;
 import com.proxask.repository.FollowRepository;
 import com.proxask.repository.UserRepository;
 import com.proxask.service.user.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,16 +18,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class FollowService {
 
-    @Autowired
-    private FollowRepository followRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private UserService userService;
+    private final FollowRepository followRepository;
+    private final UserRepository userRepository;
+    private final UserService userService;
 
     @Transactional
     public Follow followUser(String targetUsername) {

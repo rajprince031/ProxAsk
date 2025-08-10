@@ -3,6 +3,7 @@ package com.proxask.controller;
 
 import com.proxask.dto.AnswerDTO;
 import com.proxask.service.answer.AnswerService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -11,10 +12,10 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/answer/{id}")
+@RequiredArgsConstructor
 public class AnswerController {
 
-    @Autowired
-    private AnswerService answerService;
+    private final AnswerService answerService;
 
 
     @GetMapping

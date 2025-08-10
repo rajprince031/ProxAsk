@@ -9,6 +9,7 @@ import com.proxask.entity.User;
 import com.proxask.exception.ResourceNotFoundException;
 import com.proxask.repository.UserRepository;
 import com.proxask.service.jwt.JWTService;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,24 +30,29 @@ import static java.util.stream.Collectors.toList;
 
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private ModelMapper modelMapper;
+    private final UserRepository userRepository;
+    private final ModelMapper modelMapper;
 
     public UserDTO getUserDetails(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(() ->
-               new ResourceNotFoundException("User not found"));
+        User user = getUserByUsername(username);
         return modelMapper.map(user, UserDTO.class);
     }
 
-    public String getUserId(String username){
+    public User getUserByEmail(String email){
+        return userRepository.findByEmail(email).orElseThrow(() ->
+                new UsernameNotFoundException("Email does not exits"));
+    }
+
+    public User getUserByUsername(String username){
         return userRepository.findByUsername(username).orElseThrow(() ->
-                new ResourceNotFoundException("User not found")
-        ).getId();
+                new ResourceNotFoundException("User not found"));
+    }
+
+    public String getUserId(String username){
+        return  getUserByUsername(username).getId();
     }
 
     public User getCurrentAuthenticatedUser(){
@@ -62,8 +69,7 @@ public class UserService {
         } else {
             username =  principal.toString();
         }
-        return userRepository.findByUsername(username).orElseThrow(() ->
-                new ResourceNotFoundException("User not found with username: " + username));
+        return  getUserByUsername(username);
     }
 
 }

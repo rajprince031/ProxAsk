@@ -22,9 +22,11 @@ public class UserDTO {
     private String firstName;
     private String lastName;
     private String username;
+    private String email;
     private String bio;
     private String avatar;
     private Boolean isActive;
+    private Boolean isVerified;
     private Role role;
     private LocalDateTime updatedAt;
     private LocalDateTime createdAt;

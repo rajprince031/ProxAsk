@@ -7,13 +7,10 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Data
@@ -35,10 +32,15 @@ public class User {
 
     @Column(nullable = false)
     private String password;
+
+    @Column(nullable = false, unique = true)
+    private String email;
     private String bio;
     private String avatar;
 
     private Boolean isActive = true;
+
+    private Boolean isVerified =  false;
 
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;
