@@ -66,5 +66,4 @@ public class AnswerService {
         answerRepository.save(answer);
         return modelMapper.map(answer, AnswerDTO.class);
     }
-
 }

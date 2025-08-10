@@ -37,4 +37,5 @@ public class AnswerController {
         answerService.deleteAnswerByQuestionId(questionId);
         return ResponseEntity.ok(true);
     }
+
 }
