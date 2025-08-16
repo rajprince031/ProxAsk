@@ -1,4 +1,7 @@
 package com.proxask.exception;
 
-public class UsernameAlreadyInUseException {
+public class UsernameAlreadyInUseException extends RuntimeException {
+    public UsernameAlreadyInUseException(String usernameAlreadyInUse) {
+        super(usernameAlreadyInUse);
+    }
 }

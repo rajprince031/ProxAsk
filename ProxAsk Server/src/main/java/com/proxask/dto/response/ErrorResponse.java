@@ -1,4 +1,4 @@
-package com.proxask.dto;
+package com.proxask.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

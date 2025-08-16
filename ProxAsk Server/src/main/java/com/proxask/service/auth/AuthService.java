@@ -5,14 +5,12 @@ import com.proxask.dto.auth.AuthResponse;
 import com.proxask.dto.auth.LoginRequest;
 import com.proxask.dto.auth.RegisterRequest;
 import com.proxask.entity.User;
+import com.proxask.repository.EmailVerificationRepository;
 import com.proxask.repository.UserRepository;
-import com.proxask.service.OtpService;
 import com.proxask.service.jwt.JWTService;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -31,22 +30,23 @@ public class AuthService {
     private final JWTService jwtService;
     private final ModelMapper modelMapper;
     private final OtpService otpService;
+    private final EmailVerificationRepository emailVerificationRepository;
+    private final VerificationSupportService verificationSupportService;
 
     @Transactional
-    public ResponseEntity<UserDTO> registerUser(RegisterRequest registerRequest){
-        try {
-            registerRequest.setPassword(bCryptPasswordEncoder.encode(registerRequest.getPassword()));
-            User user = modelMapper.map(registerRequest, User.class);
-            User newUser = userRepository.save(user);
-            UserDTO userDTO = modelMapper.map(newUser, UserDTO.class);
-            otpService.sendOtp(newUser);
-            return ResponseEntity.ok(userDTO);
-        }catch (Exception e){
-            System.out.println(e);
-            return ResponseEntity
-                    .internalServerError()
-                    .body(new UserDTO());
-        }
+    public UserDTO registerUser(RegisterRequest registerRequest){
+
+        verificationSupportService.cleanupUnverifiedConflicts(
+                registerRequest.getEmail(),
+                registerRequest.getUsername()
+        );
+
+        registerRequest.setPassword(bCryptPasswordEncoder.encode(registerRequest.getPassword()));
+        User user = modelMapper.map(registerRequest, User.class);
+        User newUser = userRepository.save(user);
+        UserDTO userDTO = modelMapper.map(newUser, UserDTO.class);
+        otpService.sendOtp(newUser);
+        return userDTO;
     }
 
     public ResponseEntity<AuthResponse> loginUser(LoginRequest loginRequest){

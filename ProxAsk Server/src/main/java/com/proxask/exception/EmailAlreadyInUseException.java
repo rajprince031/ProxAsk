@@ -1,4 +1,7 @@
 package com.proxask.exception;
 
-public class EmailAlreadyInUseException {
+public class EmailAlreadyInUseException extends RuntimeException {
+    public EmailAlreadyInUseException(String emailAlreadyInUse) {
+        super(emailAlreadyInUse);
+    }
 }

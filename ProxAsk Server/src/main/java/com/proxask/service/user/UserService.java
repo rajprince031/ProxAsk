@@ -7,9 +7,12 @@ import com.proxask.dto.auth.RegisterRequest;
 import com.proxask.dto.question.QuestionDTO;
 import com.proxask.entity.User;
 import com.proxask.exception.ResourceNotFoundException;
+import com.proxask.exception.UsernameAlreadyInUseException;
+import com.proxask.repository.EmailVerificationRepository;
 import com.proxask.repository.UserRepository;
 import com.proxask.service.jwt.JWTService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,10 +34,13 @@ import static java.util.stream.Collectors.toList;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
+    private final EmailVerificationRepository emailVerificationRepository;
+
 
     public UserDTO getUserDetails(String username) {
         User user = getUserByUsername(username);

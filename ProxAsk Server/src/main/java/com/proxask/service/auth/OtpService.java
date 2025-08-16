@@ -1,8 +1,13 @@
-package com.proxask.service;
+package com.proxask.service.auth;
 
+import com.proxask.dto.auth.OtpRequest;
 import com.proxask.entity.EmailVerification;
 import com.proxask.entity.User;
+import com.proxask.exception.EmailAlreadyInUseException;
+import com.proxask.exception.ResourceNotFoundException;
+import com.proxask.exception.UserAlreadyVerifiedException;
 import com.proxask.repository.EmailVerificationRepository;
+import com.proxask.repository.UserRepository;
 import com.proxask.service.email.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +22,7 @@ public class OtpService {
 
     private final EmailVerificationRepository emailVerificationRepository;
     private final EmailService emailService;
+    private final UserRepository userRepository;
 
     public int generateOtp(){
         Random random = new Random();
@@ -38,4 +44,6 @@ public class OtpService {
     private String generateVerificationToken() {
         return UUID.randomUUID().toString().replaceAll("-","");
     }
+
+
 }
