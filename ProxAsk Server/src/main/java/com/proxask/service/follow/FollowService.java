@@ -65,13 +65,17 @@ public class FollowService {
     }
 
     public List<String> getAllFollower(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow();
+        User user = userRepository.findByUsername(username).orElseThrow(
+                () -> new ResourceNotFoundException("username not exist")
+        );
         List<Follow> follower =  followRepository.findByFollowing(user);
         return follower.stream().map(f -> f.getFollower().getUsername()).toList();
     }
 
     public List<String> getAllFollowing(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow();
+        User user = userRepository.findByUsername(username).orElseThrow(
+                () -> new ResourceNotFoundException("username not exist")
+        );
         List<Follow> follow =  followRepository.findByFollower(user);
         return follow.stream().map(f -> f.getFollowing().getUsername()).toList();
     }
