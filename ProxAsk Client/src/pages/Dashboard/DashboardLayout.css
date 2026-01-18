@@ -1,0 +1,52 @@
+.dashboardRoot {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.dashboardContent {
+  margin-top: 64px;
+  margin-left: 260px;
+  padding: 24px;
+  width: 100%;
+  background: #f6f8fc;
+  transition: margin-left 0.3s ease;
+}
+
+.dashboardContent.collapsed {
+  margin-left: 80px;
+}
+
+.dashboardTabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.dashboardTabs button {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
+  background: #eaeef5;
+  cursor: pointer;
+}
+
+.tabActive {
+  background: #2e89ff;
+  color: #fff;
+}
+
+.dashboardFeed {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+
+
+/* Mobile */
+@media (max-width: 900px) {
+  .dashboardContent,
+  .dashboardContent.collapsed {
+    margin-left: 0;
+  }
+}

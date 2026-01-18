@@ -1,0 +1,155 @@
+.loginFullScreen {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* LEFT PANEL */
+.loginLeftPanel {
+  flex: 1;
+  background: linear-gradient(135deg, #2e89ff, #1b5fc1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loginBrandContent {
+  color: #ffffff;
+  text-align: left;
+  max-width: 420px;
+}
+
+.brandLogo {
+  font-size: 52px;
+  font-weight: 800;
+  margin-bottom: 24px;
+}
+
+.brandMainText {
+  font-size: 24px;
+  line-height: 1.4;
+  margin-bottom: 16px;
+}
+
+.brandSubText {
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+/* RIGHT PANEL */
+.loginRightPanel {
+  flex: 1;
+  background-color: #f6f8fc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loginFormBox {
+  width: 420px;
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+}
+
+.loginHeading {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.loginSubHeading {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 24px;
+}
+
+/* INPUTS */
+.loginInputBlock {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 18px;
+}
+
+.loginInputBlock label {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.loginInputBlock input {
+  padding: 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.loginInputBlock input:focus {
+  outline: none;
+  border-color: #2e89ff;
+}
+
+/* ERROR */
+.loginErrorBox {
+  background-color: #ffe6e6;
+  color: #e63946;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+/* ACTIONS */
+.loginForgotWrapper {
+  text-align: right;
+  margin-bottom: 24px;
+}
+
+.loginForgotWrapper a {
+  font-size: 13px;
+  color: #2e89ff;
+  text-decoration: none;
+}
+
+.loginPrimaryButton {
+  width: 100%;
+  padding: 12px;
+  background-color: #2e89ff;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.loginPrimaryButton:hover {
+  background-color: #1b5fc1;
+}
+
+.loginFooterText {
+  margin-top: 24px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.loginFooterText a {
+  color: #2e89ff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* MOBILE FALLBACK */
+@media (max-width: 900px) {
+  .loginFullScreen {
+    flex-direction: column;
+  }
+
+  .loginLeftPanel {
+    height: 40vh;
+  }
+
+  .loginRightPanel {
+    height: 60vh;
+  }
+}

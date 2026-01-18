@@ -1,0 +1,161 @@
+.signupFullScreen {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* LEFT PANEL */
+.signupLeftPanel {
+  flex: 1;
+  background: linear-gradient(135deg, #2e89ff, #1b5fc1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signupBrandContent {
+  color: #ffffff;
+  max-width: 420px;
+}
+
+.signupBrandLogo {
+  font-size: 52px;
+  font-weight: 800;
+  margin-bottom: 24px;
+}
+
+.signupBrandMain {
+  font-size: 24px;
+  line-height: 1.4;
+  margin-bottom: 16px;
+}
+
+.signupBrandSub {
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+/* RIGHT PANEL */
+.signupRightPanel {
+  flex: 1;
+  background-color: #f6f8fc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signupFormBox {
+  width: 460px;
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+}
+
+.signupHeading {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.signupSubHeading {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 24px;
+}
+
+/* FORM */
+.signupRow {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.signupRow input {
+  flex: 1;
+  padding: 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.signupInputBlock {
+  margin-bottom: 16px;
+}
+
+.signupInputBlock input {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.signupInputBlock input:focus,
+.signupRow input:focus {
+  outline: none;
+  border-color: #2e89ff;
+}
+
+/* ERROR */
+.signupErrorBox {
+  background-color: #ffe6e6;
+  color: #e63946;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+/* BUTTON */
+.signupPrimaryButton {
+  width: 100%;
+  padding: 12px;
+  background-color: #2e89ff;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.signupPrimaryButton:hover {
+  background-color: #1b5fc1;
+}
+
+.signupPrimaryButton:disabled {
+  background-color: #aac9ff;
+}
+
+/* FOOTER */
+.signupFooterText {
+  margin-top: 24px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.signupFooterText a {
+  color: #2e89ff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* MOBILE FALLBACK */
+@media (max-width: 900px) {
+  .signupFullScreen {
+    flex-direction: column;
+  }
+
+  .signupLeftPanel {
+    height: 35vh;
+  }
+
+  .signupRightPanel {
+    height: 65vh;
+  }
+
+  .signupFormBox {
+    width: 90%;
+  }
+}

@@ -1,0 +1,162 @@
+.profilePage {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* Header */
+.profileHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.profileNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.online {
+  background: #22c55e;
+}
+
+.offline {
+  background: #9ca3af;
+}
+
+.username {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.bio {
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+/* Follow stats */
+.followStats {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+  justify-content: flex-end;
+}
+
+.statItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 5px;
+  background: #f1f5f9;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.statItem strong {
+  font-weight: 700;
+  color: #111827;
+}
+
+.statItem span {
+  font-size: 13px;
+  color: #374151;
+}
+
+.statItem.clickable:hover {
+  background: #e0ecff;
+}
+
+.statItem.disabled {
+  opacity: 0.6;
+}
+
+
+.clickable {
+  cursor: pointer;
+}
+
+.disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Actions */
+.profileActions {
+  display: flex;
+  gap: 8px;
+}
+
+.followBtn,
+.messageBtn,
+.askBtn {
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+}
+
+.followBtn {
+  background: #2e89ff;
+  color: white;
+}
+
+.followBtn.following {
+  background: #e5e7eb;
+  color: #111;
+}
+
+.messageBtn {
+  background: #f1f5f9;
+}
+
+.askBtn {
+  background: #22c55e;
+  color: white;
+}
+
+/* Tabs */
+.profileTabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.profileTabs button {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: none;
+  background: #e5e7eb;
+  cursor: pointer;
+}
+
+.profileTabs .active {
+  background: #2e89ff;
+  color: white;
+}
+
+/* Content */
+.privateProfile {
+  padding: 40px;
+  text-align: center;
+  color: #6b7280;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .profileHeader {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .followStats {
+    justify-content: flex-start;
+  }
+}
