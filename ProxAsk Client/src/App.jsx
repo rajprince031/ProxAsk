@@ -1,102 +1,117 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import "./App.css";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 
-/* Auth Pages */
+/* Pages */
 import LoginPage from "./pages/Login/LoginPage";
 import SignupPage from "./pages/Signup/SignupPage";
-import VerifyEmailPage from "./pages/VerifyEmail/VerifyEmailPage";
 import ForgotPasswordPage from "./pages/ForgotPassword/ForgotPasswordPage";
+import VerifyEmailPage from "./pages/VerifyEmail/VerifyEmailPage";
 import DashboardLayout from "./pages/Dashboard/DashboardLayout";
 import ProfilePage from "./pages/Profile/ProfilePage";
-// import SignupPage from "./pages/Signup/SignupPage";
-// import ForgotPasswordPage from "./pages/ForgotPassword/ForgotPasswordPage";
-// import VerifyEmailPage from "./pages/VerifyEmail/VerifyEmailPage";
+import NotFoundPage from "./pages/NotFound/NotFoundPage";
 
-/* Main Pages */
-// import DashboardPage from "./pages/Dashboard/DashboardPage";
-// import ProfilePage from "./pages/Profile/ProfilePage";
-// import MessagesPage from "./pages/Messages/MessagesPage";
-// import NotificationsPage from "./pages/Notifications/NotificationsPage";
-// import SettingsPage from "./pages/Settings/SettingsPage";
+/* ---------- ROUTE GUARDS ---------- */
 
-/* Protected Route Wrapper (JWT logic later) */
+/* 🔒 Protected routes (login required) */
 const ProtectedRoute = ({ children }) => {
-  const isAuthenticated = false; // replace with token check later
-
+  const { isAuthenticated } = useAuth();
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
+/* 🚫 Guest routes (login/signup not allowed if logged in) */
+const GuestRoute = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
+};
+
+/* 🛡 Admin routes (future use) */
+const AdminRoute = ({ children }) => {
+  const { user, isAuthenticated } = useAuth();
+  return isAuthenticated && user?.role === "ADMIN"
+    ? children
+    : <Navigate to="/dashboard" replace />;
+};
+
 const App = () => {
+  const { isAuthenticated } = useAuth();
+
   return (
-    <Router>
-      <Routes>
+    <Routes>
+      {/* DEFAULT ROUTE */}
+      <Route
+        path="/"
+        element={
+          isAuthenticated ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
 
-        {/* Default Redirect */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+      {/* AUTH PAGES (GUEST ONLY) */}
+      <Route
+        path="/login"
+        element={
+          <GuestRoute>
+            <LoginPage />
+          </GuestRoute>
+        }
+      />
 
-        {/* Public Routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/verify-email" element={<VerifyEmailPage />} />
-        <Route path="/dashboard" element={<DashboardLayout />} />
-        <Route path="/profile/:username" element={<ProfilePage />} />
-        
+      <Route
+        path="/signup"
+        element={
+          <GuestRoute>
+            <SignupPage />
+          </GuestRoute>
+        }
+      />
 
+      <Route
+        path="/forgot-password"
+        element={
+          <GuestRoute>
+            <ForgotPasswordPage />
+          </GuestRoute>
+        }
+      />
 
-        {/* Protected Routes */}
-        {/*
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardPage />
-            </ProtectedRoute>
-          }
-        />
+      <Route
+        path="/verify-email"
+        element={
+          <GuestRoute>
+            <VerifyEmailPage />
+          </GuestRoute>
+        }
+      />
 
-        <Route
-          path="/profile/:username"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
+      {/* PROTECTED APP ROUTES */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      />
 
-        <Route
-          path="/messages"
-          element={
-            <ProtectedRoute>
-              <MessagesPage />
-            </ProtectedRoute>
-          }
-        />
+      {/* PUBLIC PROFILE */}
+      <Route path="/profile/:username" element={<ProfilePage />} />
 
-        <Route
-          path="/notifications"
-          element={
-            <ProtectedRoute>
-              <NotificationsPage />
-            </ProtectedRoute>
-          }
-        />
+      {/* ADMIN (FUTURE READY) */}
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <div>Admin Dashboard</div>
+          </AdminRoute>
+        }
+      />
 
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <SettingsPage />
-            </ProtectedRoute>
-          }
-        />
-        */}
-
-        {/* 404 */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </Router>
+      {/* FALLBACK */}
+      <Route path="/*" element={<NotFoundPage />} />
+    </Routes>
   );
 };
 

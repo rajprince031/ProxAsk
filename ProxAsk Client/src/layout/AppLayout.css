@@ -1,0 +1,17 @@
+.appLayout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.appBody {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.appContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
