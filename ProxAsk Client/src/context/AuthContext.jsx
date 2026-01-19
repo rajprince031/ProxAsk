@@ -5,8 +5,9 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  /* Load auth state on refresh */
+  // 🔐 Restore auth on refresh
   useEffect(() => {
     const token = localStorage.getItem("token");
     const username = localStorage.getItem("username");
@@ -15,39 +16,31 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
       setUser({ username });
     }
+
+    setLoading(false);
   }, []);
 
-  /* Login */
-  const login = (authData) => {
-    localStorage.setItem("token", authData.token);
-    localStorage.setItem("username", authData.username);
+  const login = (data) => {
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("username", data.username);
 
     setIsAuthenticated(true);
-    setUser({ username: authData.username });
+    setUser({ username: data.username });
   };
 
-  /* Logout */
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("username");
-
+    localStorage.clear();
     setIsAuthenticated(false);
     setUser(null);
   };
 
   return (
     <AuthContext.Provider
-      value={{
-        isAuthenticated,
-        user,
-        login,
-        logout,
-      }}
+      value={{ isAuthenticated, user, login, logout, loading }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
 
-/* Custom hook */
 export const useAuth = () => useContext(AuthContext);

@@ -50,3 +50,25 @@
     margin-left: 0;
   }
 }
+
+
+.dashboardPage {
+  width: 100%;
+  display: block;
+}
+
+/* Force horizontal tabs */
+.dashboardTabs {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+/* Mobile tabs stay horizontal */
+@media (max-width: 600px) {
+  .dashboardTabs {
+    flex-wrap: wrap;
+  }
+}

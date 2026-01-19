@@ -1,10 +1,7 @@
 import React, { useState } from "react";
-import Navbar from "../../components/Navbar/Navbar";
-import Sidebar from "../../components/Sidebar/Sidebar";
 import { dummyProfiles } from "../../utils/dummyProfiles";
 
 import QuestionCard from "../../components/QuestionCard/QuestionCard";
-import AskQuestionModal from "../../components/AskQuestionModal/AskQuestionModal";
 import "./DashboardLayout.css";
 
 const questionsData = [
@@ -80,28 +77,10 @@ const dummyQuestions = [
 
 
 const DashboardLayout = () => {
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-    const [showAskModal, setShowAskModal] = useState(false);
+
 
     return (
-        <div className="dashboardRoot">
-            <Navbar
-                onMenuClick={() => setMobileSidebarOpen(prev => !prev)}
-            />
-
-            <Sidebar
-                collapsed={sidebarCollapsed}
-                onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-                mobileOpen={mobileSidebarOpen}
-                onMobileClose={() => setMobileSidebarOpen(false)}
-                onAskQuestion={() => setShowAskModal(true)}
-            />
-
-            <main
-                className={`dashboardContent ${sidebarCollapsed ? "collapsed" : ""
-                    }`}
-            >
+        <div className="dashboardPage">
                 <div className="dashboardTabs">
                     <button className="tabActive">All</button>
                     <button>Following</button>
@@ -124,13 +103,6 @@ const DashboardLayout = () => {
                         />
                     ))}
                 </div>
-
-
-            </main>
-            <AskQuestionModal
-                isOpen={showAskModal}
-                onClose={() => setShowAskModal(false)}
-            />
         </div>
     );
 };
