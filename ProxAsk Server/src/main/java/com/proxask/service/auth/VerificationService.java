@@ -4,6 +4,7 @@ package com.proxask.service.auth;
 import com.proxask.entity.EmailVerification;
 import com.proxask.entity.User;
 import com.proxask.exception.UserAlreadyVerifiedException;
+import com.proxask.exception.UserNotVerifiedException;
 import com.proxask.exception.VerificationException;
 import com.proxask.repository.EmailVerificationRepository;
 import com.proxask.repository.UserRepository;
@@ -37,17 +38,19 @@ public class VerificationService {
 
     }
 
-    public void isAccountVerified(User user){
-        if(Boolean.TRUE.equals(user.getIsVerified()))
-            throw new UserAlreadyVerifiedException("This account has already been verified.");
+    public boolean isAccountVerified(User user){
+        return Boolean.TRUE.equals(user.getIsVerified());
     }
 
 
 
+    // Verify Otp
     @Transactional
-    public void verify(String email, int otp){
+    public void verifyOtp(String email, int otp){
         User user = userService.getUserByEmail(email);
-        isAccountVerified(user);
+        if(isAccountVerified(user))
+            throw new UserAlreadyVerifiedException("This account has already been verified.");
+
 
         EmailVerification emailVerification = getEmailVerification(user);
         isTokenExpired(emailVerification);
@@ -70,22 +73,25 @@ public class VerificationService {
 
     }
 
+    //Verify login Token
+
+    // -- I need to work from here
     @Transactional
-    public void verify(String token){
+    public void verifyToken(String token){
         EmailVerification emailVerification = findEmailVerificationByToken(token);
 
         isTokenExpired(emailVerification);
-        verificationSupportService.isMaxAttemptsExceeded(emailVerification);
 
         User user = emailVerification.getUser();
-        user.setIsVerified(true);
-        userRepository.save(user);
-        emailVerificationRepository.delete(emailVerification);
+        if(!isAccountVerified(user))
+            throw new UserNotVerifiedException("This account is not verified");
     }
 
+    // Resend Otp
     public void resendOtp(String email){
         User user = userService.getUserByEmail(email);
-        isAccountVerified(user);
+        if(isAccountVerified(user))
+            throw new UserAlreadyVerifiedException("This account has already been verified.");
 
         EmailVerification emailVerification = getEmailVerification(user);
         if(emailVerification.getExpiryDate().minusMinutes(8).isBefore(LocalDateTime.now()))

@@ -60,7 +60,8 @@ public class AuthService {
 
         String username = loginRequest.getUsername();
         AuthResponse authResponse = new AuthResponse(
-                jwtService.generateToken(username),username
+                jwtService.generateToken(username),
+                username
         );
         return ResponseEntity.ok(authResponse);
     }

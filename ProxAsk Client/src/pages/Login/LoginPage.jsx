@@ -30,7 +30,8 @@ const LoginPage = () => {
         setLoading(true);
         setErrors("");
         loginUser(formData).then((response) => {
-           login(response.data);
+           const hello = login(response.data);
+           console.log("I am here" , hello)
             navigate("/dashboard");
         }).catch((err) => {
             setErrors({ apiError: err.response?.data?.message || "Invalid email or password" });

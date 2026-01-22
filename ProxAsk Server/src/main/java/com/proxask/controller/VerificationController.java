@@ -8,21 +8,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/verify")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class VerificationController {
 
     private final VerificationService verificationService;
 
-    @PostMapping
+    @PostMapping("/verify-otp")
     public ResponseEntity<ApiResponse<Void>> verifyOtpRequest(@RequestBody OtpRequest otpRequest){
-        verificationService.verify(otpRequest.getEmail(), otpRequest.getOtp());
+        verificationService.verifyOtp(otpRequest.getEmail(), otpRequest.getOtp());
         return ResponseEntity.ok(new ApiResponse<>(true,"Otp verified successfully",null));
     }
 
-    @GetMapping
+    @GetMapping("/verify-token")
     public ResponseEntity<ApiResponse<Void>> verifyTokenRequest(@RequestParam String token){
-        verificationService.verify(token);
+        verificationService.verifyToken(token);
         return ResponseEntity.ok(new ApiResponse<>(true,"Token verified successfully",null));
     }
 

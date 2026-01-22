@@ -24,13 +24,14 @@ public class OtpService {
     private final EmailService emailService;
     private final UserRepository userRepository;
 
+    //Generate 6 digits otp
     public int generateOtp(){
         Random random = new Random();
         return (100000 + random.nextInt(900000));
     }
 
+    //Send Email to user
     public void sendOtp(User user){
-        // 6-digit
         EmailVerification emailVerification = EmailVerification.builder().
                 user(user).
                 otp(generateOtp()).
@@ -41,6 +42,7 @@ public class OtpService {
         emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), emailVerification.getOtp(), emailVerification.getVerificationToken());
     }
 
+    //Generate token
     private String generateVerificationToken() {
         return UUID.randomUUID().toString().replaceAll("-","");
     }

@@ -94,5 +94,12 @@ public class GlobalExceptionHandler {
                 .status(409)
                 .body(new ErrorResponse( ex.getMessage(), 409));
     }
+
+    @ExceptionHandler(UserNotVerifiedException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotVerifiedException(UserNotVerifiedException ex){
+        return ResponseEntity
+                .status(401)
+                .body(new ErrorResponse( ex.getMessage(), 401));
+    }
 }
 

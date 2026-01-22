@@ -44,7 +44,13 @@ public class SecurityConfig  {
                 .csrf(AbstractHttpConfigurer::disable)
         .authorizeHttpRequests(req ->
                 req.requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/auth/login", "/api/auth/register", "/ask/**","/user/**","/verify/**")
+                        .requestMatchers(
+                                "/api/auth/login",
+                                "/api/auth/register",
+                                "/api/verify-otp",
+                                "/api/reset-otp",
+                                "/ask/**","/user/**",
+                                "/api/verify-token")
                         .permitAll()
                         .anyRequest()
                         .authenticated())
@@ -69,11 +75,13 @@ public class SecurityConfig  {
 
     }
 
+    // Password Encryption
     @Bean
     public BCryptPasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder(12);
     }
 
+    // Allow frontend to use all the api
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();

@@ -1,14 +1,5 @@
-import axios from "axios";
+import axiosInstance from "./axiosInstance";
 
-const API_BASE_URL = "http://localhost:8080/api/auth"; // change later
-
-export const loginUser = (loginData) => {
-  return axios.post(
-    `${API_BASE_URL}/login`, 
-    loginData, 
-    {
-        headers: {
-          "Content-Type": "application/json",
-        },
-  });
+export const loginUser = (data) => {
+  return axiosInstance.post("/auth/login", data);
 };
