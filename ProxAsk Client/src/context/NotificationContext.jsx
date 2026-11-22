@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { notificationService } from '../services/notificationService';
+import { notificationService } from '../service/NotificationService';
 import { useAuth } from './AuthContext';
 
-const NotificationContext = createContext();
+export const NotificationContext = createContext();
 
 const initialState = {
   notifications: [],
@@ -54,7 +54,7 @@ const notificationReducer = (state, action) => {
         notifications: state.notifications.map(notif => ({ ...notif, read: true })),
         unreadCount: 0
       };
-    case 'DELETE_NOTIFICATION':
+    case 'DELETE_NOTIFICATION': {
       const notification = state.notifications.find(n => n.id === action.payload);
       return {
         ...state,
@@ -63,6 +63,7 @@ const notificationReducer = (state, action) => {
           ? Math.max(0, state.unreadCount - 1) 
           : state.unreadCount
       };
+    }
     case 'CLEAR_NOTIFICATIONS':
       return {
         ...state,
@@ -165,10 +166,23 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
-  // Toast notification methods
-  const showToast = (message, type = 'info', duration = 5000) => {
+  // Toast notification methods — Supports plain string or { title, message } object
+  const showToast = (content, type = 'info', duration = 5000) => {
+    let title = null;
+    let message = '';
+
+    if (typeof content === 'object' && content !== null) {
+      title = content.title || null;
+      message = content.message || '';
+      if (content.type) type = content.type;
+      if (content.duration) duration = content.duration;
+    } else {
+      message = String(content || '');
+    }
+
     const toast = {
       id: Date.now() + Math.random(),
+      title,
       message,
       type,
       timestamp: new Date().toISOString(),
@@ -194,10 +208,10 @@ export const NotificationProvider = ({ children }) => {
   };
 
   // Convenience methods for different toast types
-  const showSuccess = (message, duration) => showToast(message, 'success', duration);
-  const showError = (message, duration) => showToast(message, 'error', duration);
-  const showWarning = (message, duration) => showToast(message, 'warning', duration);
-  const showInfo = (message, duration) => showToast(message, 'info', duration);
+  const showSuccess = (content, duration = 5000) => showToast(content, 'success', duration);
+  const showError = (content, duration = 6000) => showToast(content, 'error', duration);
+  const showWarning = (content, duration = 5000) => showToast(content, 'warning', duration);
+  const showInfo = (content, duration = 5000) => showToast(content, 'info', duration);
 
   const value = {
     ...state,

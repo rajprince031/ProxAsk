@@ -1,0 +1,50 @@
+/* AppLayout Styles — GitHub Light Design System */
+.px-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-muted);
+}
+
+.px-layout__body {
+  display: flex;
+  flex: 1;
+  min-height: calc(100vh - var(--header-height));
+}
+
+.px-layout__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-y: auto;
+  background-color: var(--bg-muted);
+}
+
+.px-layout__content-inner {
+  max-width: 1140px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg);
+  flex: 1;
+}
+
+/* Guest layout: expanded full width with no sidebar or mobile bottom nav */
+.px-layout--guest .px-layout__content,
+.px-layout__content--guest {
+  width: 100%;
+}
+
+.px-layout__content--guest .px-layout__content-inner {
+  max-width: 1200px;
+}
+
+@media (max-width: 768px) {
+  .px-layout__content-inner {
+    padding: var(--space-md) var(--space-sm) 72px; /* Bottom padding for mobile navigation bar */
+  }
+
+  .px-layout__content--guest .px-layout__content-inner {
+    padding: var(--space-md) var(--space-sm) var(--space-lg); /* No bottom nav on guest layout */
+  }
+}

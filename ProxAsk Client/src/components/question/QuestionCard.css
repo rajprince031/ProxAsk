@@ -1,0 +1,277 @@
+/* QuestionCard Styles — GitHub Light Design System */
+.px-qcard {
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-md); /* 8px */
+  padding: var(--space-md) var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.px-qcard:hover {
+  border-color: var(--border-color-hover);
+  box-shadow: var(--shadow-sm);
+}
+
+.px-qcard__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.px-qcard__author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.px-qcard__anon-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  background-color: #24292F;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+}
+
+.px-qcard__author-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.px-qcard__anon-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.px-qcard__author-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.px-qcard__author-name:hover {
+  color: var(--brand-primary);
+  text-decoration: underline;
+}
+
+.px-qcard__time {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.px-qcard__target-arrow {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.px-qcard__target-link {
+  font-size: 12px;
+  color: var(--brand-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.px-qcard__target-link:hover {
+  text-decoration: underline;
+}
+
+.px-qcard__top-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Visibility Badge */
+.px-qcard__visibility-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background-color: var(--bg-muted);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-fast);
+}
+
+.px-qcard__visibility-badge:not(:disabled):hover {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-color-hover);
+}
+
+.px-qcard__icon-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.px-qcard__icon-btn:hover {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.px-qcard__icon-btn--danger:hover {
+  background-color: var(--danger-light);
+  color: var(--danger);
+}
+
+/* Content */
+.px-qcard__content {
+  padding: 2px 0;
+}
+
+.px-qcard__text {
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  font-weight: 450;
+  word-break: break-word;
+}
+
+/* Answer Box */
+.px-qcard__answer-box {
+  background-color: var(--bg-muted);
+  border-left: 3px solid var(--brand-primary);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: var(--space-sm) var(--space-md);
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.px-qcard__answer-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.px-qcard__answer-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.px-qcard__answer-author {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.px-qcard__answer-author:hover {
+  color: var(--brand-primary);
+  text-decoration: underline;
+}
+
+/* Heart Like Button */
+.px-qcard__like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.px-qcard__like-btn:hover {
+  border-color: #D1242F;
+  color: #D1242F;
+  background-color: var(--danger-light);
+}
+
+.px-qcard__like-btn--active {
+  border-color: #D1242F;
+  color: #D1242F;
+  background-color: var(--danger-light);
+}
+
+.px-qcard__like-count {
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.px-qcard__answer-delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.px-qcard__answer-delete-btn:hover {
+  background-color: var(--danger-light);
+  color: var(--danger);
+}
+
+.px-qcard__answer-text {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  word-break: break-word;
+}
+
+/* Unanswered / Answering Area */
+.px-qcard__unanswered {
+  margin-top: 2px;
+}
+
+.px-qcard__waiting-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  background-color: var(--bg-muted);
+}
+
+.px-qcard__answer-trigger {
+  border-style: dashed;
+}
+
+.px-qcard__answer-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.px-qcard__answer-input {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  font-size: 13.5px;
+}
+
+.px-qcard__form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-xs);
+}

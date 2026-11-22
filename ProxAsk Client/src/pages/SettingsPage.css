@@ -1,0 +1,261 @@
+/* Settings Page Styles — GitHub Light Design System */
+.px-settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.px-settings__badge-wrap {
+  margin-bottom: var(--space-xs);
+}
+
+.px-settings__title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px 0;
+}
+
+.px-settings__subtitle {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.px-settings__grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.px-settings__card {
+  padding: var(--space-lg);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.px-settings__card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.px-settings__card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--brand-primary);
+}
+
+.px-settings__card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.px-settings__card-desc {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Theme Grid */
+.px-settings__theme-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.px-settings__theme-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface);
+  text-align: left;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.px-settings__theme-card:hover {
+  background-color: var(--bg-surface-hover);
+  border-color: var(--border-color-hover);
+}
+
+.px-settings__theme-card--active {
+  border-color: var(--brand-primary);
+  background-color: var(--brand-primary-light);
+}
+
+.px-settings__theme-preview {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.px-settings__theme-preview--light {
+  background-color: #F6F8FA;
+  color: #0D6731;
+  border: 1px solid #E5E7EB;
+}
+
+.px-settings__theme-preview--dark {
+  background-color: #161B22;
+  color: #F0F6FC;
+  border: 1px solid #30363D;
+}
+
+.px-settings__theme-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.px-settings__theme-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.px-settings__theme-sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Privacy Toggle Box */
+.px-settings__privacy-toggle-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-muted);
+  border: 1px solid var(--border-color);
+  gap: var(--space-md);
+}
+
+.px-settings__privacy-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.px-settings__privacy-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.px-settings__privacy-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* User Identity Row */
+.px-settings__user-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+  flex-wrap: wrap;
+}
+
+.px-settings__profile-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.px-settings__name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.px-settings__profile-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.px-settings__profile-handle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.px-settings__data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+  padding-top: var(--space-xs);
+  border-top: 1px solid var(--border-color);
+}
+
+.px-settings__data-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.px-settings__data-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+}
+
+.px-settings__data-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* Danger Card */
+.px-settings__danger-card {
+  border-color: rgba(209, 36, 47, 0.2);
+}
+
+.px-settings__danger-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.px-settings__danger-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: block;
+}
+
+.px-settings__danger-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 2px 0 0 0;
+}
+
+@media (max-width: 600px) {
+  .px-settings__theme-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .px-settings__data-grid {
+    grid-template-columns: 1fr;
+  }
+}

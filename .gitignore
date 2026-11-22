@@ -32,3 +32,9 @@ build/
 ### VS Code ###
 .vscode/
 .DS_Store
+
+### Environment Files ###
+.env
+.env.*
+!.env.example
+node_modules/

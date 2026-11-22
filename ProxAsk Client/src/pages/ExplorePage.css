@@ -1,0 +1,223 @@
+/* Explore Page Styles — GitHub Light Design System */
+.px-explore {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.px-explore__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.px-explore__badge-wrap {
+  margin-bottom: var(--space-xs);
+}
+
+.px-explore__title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px 0;
+}
+
+.px-explore__subtitle {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 600px;
+}
+
+/* Search Bar */
+.px-explore__search-wrap {
+  width: 100%;
+}
+
+.px-explore__search-form {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 100%;
+}
+
+.px-explore__search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.px-explore__search-input {
+  flex: 1;
+  height: 38px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0 36px 0 36px;
+  font-size: 13.5px;
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+.px-explore__search-input:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px var(--brand-primary-light);
+}
+
+.px-explore__search-clear {
+  position: absolute;
+  right: 90px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.px-explore__search-clear:hover {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+/* Section Header */
+.px-explore__section-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.px-explore__section-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.px-explore__count {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Grid */
+.px-explore__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-md);
+}
+
+.px-explore__card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  height: 100%;
+}
+
+.px-explore__card-top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.px-explore__card-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.px-explore__card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.px-explore__card-name:hover {
+  color: var(--brand-primary);
+  text-decoration: underline;
+}
+
+.px-explore__card-handle {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.px-explore__card-bio {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-bottom: var(--space-xs);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.px-explore__card-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.px-explore__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.px-explore__meta-link {
+  color: var(--brand-primary);
+  text-decoration: none;
+}
+
+.px-explore__meta-link:hover {
+  text-decoration: underline;
+}
+
+.px-explore__card-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  padding: 6px 0;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: var(--space-sm);
+}
+
+.px-explore__card-stats strong {
+  color: var(--text-primary);
+}
+
+.px-explore__card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.px-explore__action-btn {
+  flex: 1;
+}
+
+@media (max-width: 640px) {
+  .px-explore__grid {
+    grid-template-columns: 1fr;
+  }
+}

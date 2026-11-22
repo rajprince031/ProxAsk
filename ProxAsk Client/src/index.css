@@ -1,0 +1,366 @@
+/* ==========================================================================
+   PROXASK DESIGN SYSTEM — GITHUB LIGHT DESIGN SPECIFICATION
+   Authoritative Reference: github.com-design.md
+   
+   Color Tokens:
+   - Primary: #0D6731
+   - Secondary: #08872B
+   - Tertiary: #D2D9D4
+   - Neutral / Surface: #FFFFFF
+   - On-surface: #000000
+   - Border: #E5E7EB
+   - Muted: #F6F8FA
+   - Success: #08872B
+   - Error: #D1242F
+   - Text: #000000
+   - Muted text: #57606A
+   
+   Typography:
+   - Primary UI: 'Mona Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif
+   - Code & Metadata: 'Mona Sans Mono', SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace
+   
+   Corner Radii:
+   - Buttons & Inputs: 6px
+   - Cards: 8px
+   ========================================================================== */
+
+:root {
+  /* Typography Scale */
+  --font-sans: 'Mona Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-mono: 'Mona Sans Mono', 'JetBrains Mono', SFMono-Regular, Consolas, Menlo, monospace;
+
+  /* GitHub Light Primary Palette */
+  --brand-primary: #0D6731;
+  --brand-primary-hover: #0a5227;
+  --brand-primary-light: rgba(13, 103, 49, 0.08);
+
+  --brand-secondary: #08872B;
+  --brand-secondary-hover: #066d23;
+  --brand-secondary-light: rgba(8, 135, 43, 0.08);
+
+  --brand-tertiary: #D2D9D4;
+
+  /* Functional Status Colors */
+  --success: #08872B;
+  --success-hover: #066d23;
+  --success-light: rgba(8, 135, 43, 0.1);
+
+  --danger: #D1242F;
+  --danger-hover: #b31d27;
+  --danger-light: rgba(209, 36, 47, 0.1);
+
+  --warning: #9A6700;
+  --warning-light: rgba(154, 103, 0, 0.1);
+
+  /* Spacing Scale */
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 20px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+
+  /* Corner Radii */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* Dimensions */
+  --header-height: 56px;
+  --sidebar-width: 250px;
+  --sidebar-width-collapsed: 72px;
+
+  /* Light Theme (Default: GitHub Light) */
+  --bg-primary: #FFFFFF;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #FFFFFF;
+  --bg-surface-hover: #F6F8FA;
+  --bg-surface-active: #EFF2F5;
+  --bg-muted: #F6F8FA;
+  --bg-subtle: #F6F8FA;
+
+  --border-color: #E5E7EB;
+  --border-color-hover: #D0D7DE;
+  --border-color-active: #0D6731;
+
+  --text-primary: #000000;
+  --text-secondary: #57606A;
+  --text-muted: #6E7781;
+  --text-inverse: #FFFFFF;
+
+  --accent-primary: #0D6731;
+  --accent-primary-hover: #0a5227;
+  --accent-secondary: #08872B;
+
+  --shadow-sm: 0 1px 2px rgba(27, 31, 36, 0.04);
+  --shadow-md: 0 3px 6px rgba(140, 149, 159, 0.15);
+  --shadow-lg: 0 8px 24px rgba(140, 149, 159, 0.2);
+  --shadow-dropdown: 0 8px 24px rgba(140, 149, 159, 0.2);
+
+  --transition-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================================================
+   COHERENT DARK THEME COUNTERPART
+   Restrained, high-contrast, clean grey borders
+   ========================================================================== */
+[data-theme="dark"] {
+  --bg-primary: #0D1117;
+  --bg-surface: #161B22;
+  --bg-surface-elevated: #21262D;
+  --bg-surface-hover: #30363D;
+  --bg-surface-active: #3C444D;
+  --bg-muted: #161B22;
+  --bg-subtle: #21262D;
+
+  --border-color: #30363D;
+  --border-color-hover: #484F58;
+  --border-color-active: #238636;
+
+  --text-primary: #F0F6FC;
+  --text-secondary: #8B949E;
+  --text-muted: #6E7681;
+  --text-inverse: #0D1117;
+
+  --brand-primary: #238636;
+  --brand-primary-hover: #2EA043;
+  --brand-primary-light: rgba(35, 134, 54, 0.15);
+
+  --brand-secondary: #2EA043;
+  --brand-secondary-hover: #3FB950;
+  --brand-secondary-light: rgba(46, 160, 67, 0.15);
+
+  --brand-tertiary: #30363D;
+
+  --success: #2EA043;
+  --success-hover: #3FB950;
+  --success-light: rgba(46, 160, 67, 0.15);
+
+  --danger: #F85149;
+  --danger-hover: #DA3633;
+  --danger-light: rgba(248, 81, 73, 0.15);
+
+  --warning: #D29922;
+  --warning-light: rgba(210, 153, 34, 0.15);
+
+  --accent-primary: #238636;
+  --accent-primary-hover: #2EA043;
+  --accent-secondary: #2EA043;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 3px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-dropdown: 0 12px 28px rgba(0, 0, 0, 0.6);
+}
+
+/* ==========================================================================
+   BASE & RESET
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-muted);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+.font-mono {
+  font-family: var(--font-mono) !important;
+}
+
+/* Links */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+/* Inputs, Textareas, Selects */
+input, textarea, select, button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* Button Reset */
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* ==========================================================================
+   SWEETALERT2 CUSTOM GITHUB LIGHT STYLING
+   ========================================================================== */
+div:where(.swal2-container) {
+  z-index: 10000 !important;
+}
+
+/* Explicitly hide SweetAlert2's internal deny button unless explicitly requested */
+div:where(.swal2-container) .swal2-actions button.swal2-deny {
+  display: none !important;
+}
+
+div:where(.swal2-container) .swal2-actions button.swal2-deny.px-swal-btn--show-deny {
+  display: inline-flex !important;
+}
+
+.px-swal-close-btn {
+  color: var(--text-secondary) !important;
+  font-family: inherit !important;
+  font-size: 1.25rem !important;
+  line-height: 1 !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  padding: 8px !important;
+  transition: color var(--transition-fast) !important;
+}
+
+.px-swal-close-btn:hover {
+  color: var(--text-primary) !important;
+}
+
+.px-swal-popup {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-md) !important;
+  padding: var(--space-xl) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--shadow-lg) !important;
+  font-family: var(--font-sans) !important;
+}
+
+.px-swal-title {
+  color: var(--text-primary) !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  margin-bottom: var(--space-xs) !important;
+}
+
+.px-swal-content {
+  color: var(--text-secondary) !important;
+  font-size: 0.95rem !important;
+  line-height: 1.5 !important;
+}
+
+.px-swal-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 500 !important;
+  font-size: 0.9rem !important;
+  padding: 7px 16px !important;
+  border-radius: var(--radius-sm) !important;
+  cursor: pointer !important;
+  transition: all var(--transition-fast) !important;
+  margin: 0 6px !important;
+}
+
+.px-swal-btn--confirm {
+  background-color: var(--brand-primary) !important;
+  color: #FFFFFF !important;
+  border: 1px solid var(--brand-primary) !important;
+}
+
+.px-swal-btn--confirm:hover {
+  background-color: var(--brand-primary-hover) !important;
+}
+
+.px-swal-btn--secondary {
+  background-color: var(--brand-secondary) !important;
+  color: #FFFFFF !important;
+  border: 1px solid var(--brand-secondary) !important;
+}
+
+.px-swal-btn--secondary:hover {
+  background-color: var(--brand-secondary-hover) !important;
+}
+
+.px-swal-btn--danger {
+  background-color: var(--danger) !important;
+  color: #FFFFFF !important;
+  border: 1px solid var(--danger) !important;
+}
+
+.px-swal-btn--danger:hover {
+  background-color: var(--danger-hover) !important;
+}
+
+.px-swal-btn--cancel {
+  background-color: var(--bg-surface-hover) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.px-swal-btn--cancel:hover {
+  background-color: var(--border-color) !important;
+}
+
+/* ==========================================================================
+   GLOBAL UTILITIES
+   ========================================================================== */
+.animate-fade-in {
+  animation: fadeIn 180ms ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-color-hover);
+}

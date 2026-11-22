@@ -1,41 +1,51 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FiSearch, FiBell, FiUser, FiLogOut, FiSettings, FiMenu, FiX } from 'react-icons/fi';
+import { 
+  Search, 
+  Bell, 
+  User as UserIcon, 
+  LogOut, 
+  Settings, 
+  Shield, 
+  Sun, 
+  Moon,
+  Plus,
+  Compass,
+  Menu
+} from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useNotifications } from '../../../context/NotificationContext';
+import { useTheme } from '../../../context/ThemeContext';
+import Avatar from '../../common/Avatar';
 import './Navbar.css';
 
-const Navbar = () => {
+const Navbar = ({ onToggleMobileSidebar }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, isAuthenticated, logout, isAdmin } = useAuth();
   const { unreadCount } = useNotifications();
+  const { isDark, toggleTheme } = useTheme();
+
+  const homeRoute = (isAuthenticated || user) ? '/dashboard' : '/';
+
   const [searchQuery, setSearchQuery] = useState('');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const profileMenuRef = useRef(null);
-  const mobileMenuRef = useRef(null);
 
-  // Close menus when clicking outside
+  // Close menus on outside click
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+    const handleClickOutside = (e) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
         setShowProfileMenu(false);
       }
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
-        setShowMobileMenu(false);
-      }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Close mobile menu on route change
+  // Close menu on route change
   useEffect(() => {
-    setShowMobileMenu(false);
+    setShowProfileMenu(false);
   }, [location.pathname]);
 
   const handleSearch = (e) => {
@@ -49,201 +59,179 @@ const Navbar = () => {
   const handleLogout = () => {
     logout();
     navigate('/login');
-    setShowProfileMenu(false);
-  };
-
-  const toggleProfileMenu = () => {
-    setShowProfileMenu(!showProfileMenu);
-  };
-
-  const toggleMobileMenu = () => {
-    setShowMobileMenu(!showMobileMenu);
   };
 
   return (
-    <nav className="proxask-navbar">
-      <div className="proxask-navbar__container">
-        {/* Logo Section */}
-        <div className="proxask-navbar__logo">
-          <Link to="/dashboard" className="proxask-navbar__logo-link">
-            <span className="proxask-navbar__logo-text">Proxask</span>
+    <header className="px-navbar">
+      <div className="px-navbar__container">
+        {/* Left: Mobile Menu & Brand */}
+        <div className="px-navbar__left">
+          {user && onToggleMobileSidebar && (
+            <button
+              type="button"
+              className="px-navbar__mobile-toggle"
+              onClick={onToggleMobileSidebar}
+              aria-label="Toggle navigation menu"
+            >
+              <Menu size={20} />
+            </button>
+          )}
+
+          <Link to={homeRoute} className="px-navbar__brand">
+            <div className="px-navbar__brand-badge font-mono">P</div>
+            <span className="px-navbar__brand-name">
+              Prox<span className="px-navbar__brand-accent">Ask</span>
+            </span>
           </Link>
         </div>
 
-        {/* Search Bar - Desktop */}
-        <div className="proxask-navbar__search">
-          <form onSubmit={handleSearch} className="proxask-navbar__search-form">
-            <div className="proxask-navbar__search-input-wrapper">
-              <FiSearch className="proxask-navbar__search-icon" />
-              <input
-                type="text"
-                placeholder="Search questions, users..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="proxask-navbar__search-input"
-              />
-            </div>
+        {/* Center: Search Bar */}
+        <div className="px-navbar__center">
+          <form onSubmit={handleSearch} className="px-navbar__search-form">
+            <Search size={15} className="px-navbar__search-icon" />
+            <input
+              type="text"
+              placeholder="Search creators, people, questions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="px-navbar__search-input"
+            />
+            <span className="px-navbar__search-hint font-mono">↵</span>
           </form>
         </div>
 
-        {/* Desktop Navigation */}
-        <div className="proxask-navbar__nav">
-          {/* Notifications */}
-          <Link 
-            to="/notifications" 
-            className="proxask-navbar__nav-item proxask-navbar__notifications"
-            title="Notifications"
-          >
-            <FiBell className="proxask-navbar__nav-icon" />
-            {unreadCount > 0 && (
-              <span className="proxask-navbar__notification-badge">
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </span>
-            )}
-          </Link>
+        {/* Right: Actions */}
+        <div className="px-navbar__right">
+          {/* Quick Ask Button (authenticated only) */}
+          {user && (
+            <Link to="/ask" className="px-navbar__ask-btn">
+              <Plus size={15} />
+              <span className="px-navbar__ask-btn-text">Ask</span>
+            </Link>
+          )}
 
-          {/* Profile Menu */}
-          <div className="proxask-navbar__profile" ref={profileMenuRef}>
-            <button
-              onClick={toggleProfileMenu}
-              className="proxask-navbar__profile-trigger"
-              title="Profile Menu"
-            >
-              {user?.profilePicture ? (
-                <img
-                  src={user.profilePicture}
-                  alt={user.firstname}
-                  className="proxask-navbar__profile-image"
-                />
-              ) : (
-                <div className="proxask-navbar__profile-avatar">
-                  {user?.firstname?.charAt(0)?.toUpperCase() || 'U'}
-                </div>
-              )}
-            </button>
-
-            {showProfileMenu && (
-              <div className="proxask-navbar__profile-menu">
-                <div className="proxask-navbar__profile-menu-header">
-                  <div className="proxask-navbar__profile-menu-user">
-                    <p className="proxask-navbar__profile-menu-name">
-                      {user?.firstname} {user?.lastname}
-                    </p>
-                    <p className="proxask-navbar__profile-menu-username">
-                      @{user?.username}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="proxask-navbar__profile-menu-divider"></div>
-                
-                <div className="proxask-navbar__profile-menu-items">
-                  <Link
-                    to={`/profile/${user?.id}`}
-                    className="proxask-navbar__profile-menu-item"
-                    onClick={() => setShowProfileMenu(false)}
-                  >
-                    <FiUser className="proxask-navbar__profile-menu-item-icon" />
-                    My Profile
-                  </Link>
-                  
-                  <Link
-                    to="/settings"
-                    className="proxask-navbar__profile-menu-item"
-                    onClick={() => setShowProfileMenu(false)}
-                  >
-                    <FiSettings className="proxask-navbar__profile-menu-item-icon" />
-                    Settings
-                  </Link>
-                  
-                  <div className="proxask-navbar__profile-menu-divider"></div>
-                  
-                  <button
-                    onClick={handleLogout}
-                    className="proxask-navbar__profile-menu-item proxask-navbar__logout-button"
-                  >
-                    <FiLogOut className="proxask-navbar__profile-menu-item-icon" />
-                    Logout
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile Menu Toggle */}
-        <div className="proxask-navbar__mobile-toggle">
+          {/* Theme Toggle */}
           <button
-            onClick={toggleMobileMenu}
-            className="proxask-navbar__mobile-toggle-btn"
-            title="Menu"
+            type="button"
+            className="px-navbar__action-btn"
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
-            {showMobileMenu ? <FiX /> : <FiMenu />}
+            {isDark ? <Sun size={17} /> : <Moon size={17} />}
           </button>
-        </div>
-      </div>
 
-      {/* Mobile Menu */}
-      {showMobileMenu && (
-        <div className="proxask-navbar__mobile-menu" ref={mobileMenuRef}>
-          {/* Mobile Search */}
-          <div className="proxask-navbar__mobile-search">
-            <form onSubmit={handleSearch} className="proxask-navbar__search-form">
-              <div className="proxask-navbar__search-input-wrapper">
-                <FiSearch className="proxask-navbar__search-icon" />
-                <input
-                  type="text"
-                  placeholder="Search questions, users..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="proxask-navbar__search-input"
-                />
-              </div>
-            </form>
-          </div>
-
-          {/* Mobile Navigation Items */}
-          <div className="proxask-navbar__mobile-nav">
+          {/* Notifications Shortcut (authenticated only) */}
+          {user && (
             <Link
               to="/notifications"
-              className="proxask-navbar__mobile-nav-item"
+              className="px-navbar__action-btn px-navbar__notif-btn"
+              title="Notifications"
             >
-              <FiBell className="proxask-navbar__mobile-nav-icon" />
-              <span>Notifications</span>
+              <Bell size={17} />
               {unreadCount > 0 && (
-                <span className="proxask-navbar__notification-badge">
+                <span className="px-navbar__badge font-mono">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
             </Link>
+          )}
 
-            <Link
-              to={`/profile/${user?.id}`}
-              className="proxask-navbar__mobile-nav-item"
-            >
-              <FiUser className="proxask-navbar__mobile-nav-icon" />
-              <span>My Profile</span>
-            </Link>
+          {/* User Menu or Guest Auth Buttons */}
+          {user ? (
+            <div className="px-navbar__profile-wrap" ref={profileMenuRef}>
+              <button
+                type="button"
+                className="px-navbar__avatar-btn"
+                onClick={() => setShowProfileMenu(prev => !prev)}
+                aria-label="User menu"
+                aria-expanded={showProfileMenu}
+              >
+                <Avatar
+                  src={user?.avatar}
+                  name={`${user?.firstName || ''} ${user?.lastName || ''}`}
+                  username={user?.username}
+                  size="sm"
+                />
+              </button>
 
-            <Link
-              to="/settings"
-              className="proxask-navbar__mobile-nav-item"
-            >
-              <FiSettings className="proxask-navbar__mobile-nav-icon" />
-              <span>Settings</span>
-            </Link>
+              {showProfileMenu && (
+                <div className="px-navbar__menu animate-fade-in">
+                  <div className="px-navbar__menu-header">
+                    <div className="px-navbar__menu-user-name">
+                      {user?.firstName} {user?.lastName}
+                    </div>
+                    <div className="px-navbar__menu-user-handle font-mono">
+                      @{user?.username}
+                    </div>
+                  </div>
 
-            <button
-              onClick={handleLogout}
-              className="proxask-navbar__mobile-nav-item proxask-navbar__mobile-logout"
-            >
-              <FiLogOut className="proxask-navbar__mobile-nav-icon" />
-              <span>Logout</span>
-            </button>
-          </div>
+                  <div className="px-navbar__menu-divider" />
+
+                  <Link
+                    to="/profile"
+                    className="px-navbar__menu-item"
+                    onClick={() => setShowProfileMenu(false)}
+                  >
+                    <UserIcon size={16} />
+                    <span>My Profile</span>
+                  </Link>
+
+                  <Link
+                    to="/explore"
+                    className="px-navbar__menu-item"
+                    onClick={() => setShowProfileMenu(false)}
+                  >
+                    <Compass size={16} />
+                    <span>Discover People</span>
+                  </Link>
+
+                  <Link
+                    to="/settings"
+                    className="px-navbar__menu-item"
+                    onClick={() => setShowProfileMenu(false)}
+                  >
+                    <Settings size={16} />
+                    <span>Account Settings</span>
+                  </Link>
+
+                  {isAdmin && isAdmin() && (
+                    <Link
+                      to="/admin"
+                      className="px-navbar__menu-item px-navbar__menu-item--admin"
+                      onClick={() => setShowProfileMenu(false)}
+                    >
+                      <Shield size={16} />
+                      <span>Admin Console</span>
+                    </Link>
+                  )}
+
+                  <div className="px-navbar__menu-divider" />
+
+                  <button
+                    type="button"
+                    className="px-navbar__menu-item px-navbar__menu-item--logout"
+                    onClick={handleLogout}
+                  >
+                    <LogOut size={16} />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="px-navbar__guest-btns">
+              <Link to="/login" className="px-btn px-btn--outline px-btn--sm">
+                Log In
+              </Link>
+              <Link to="/signup" className="px-btn px-btn--primary px-btn--sm">
+                Sign Up
+              </Link>
+            </div>
+          )}
         </div>
-      )}
-    </nav>
+      </div>
+    </header>
   );
 };
 

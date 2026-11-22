@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { authService } from '../services/authService';
+import { authService } from '../service/AuthService';
 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
 const initialState = {
   user: null,
@@ -75,7 +75,7 @@ export const AuthProvider = ({ children }) => {
             type: 'AUTH_SUCCESS',
             payload: { user, token }
           });
-        } catch (error) {
+        } catch {
           localStorage.removeItem('proxask_token');
           localStorage.removeItem('proxask_user');
           dispatch({ type: 'AUTH_FAILURE', payload: null });
@@ -187,9 +187,32 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: 'UPDATE_USER', payload: userData });
   };
 
-  // Check if user has specific role
+  // Check if user has specific role across all common backend serialization shapes
   const hasRole = (role) => {
-    return state.user?.roles?.includes(role) || false;
+    if (!state.user) return false;
+    const target = String(role || '').toUpperCase().replace(/^ROLE_/, '');
+
+    // 1. Direct single role property (e.g. user.role === 'ADMIN' or 'ROLE_ADMIN')
+    if (state.user.role) {
+      const uRole = String(state.user.role).toUpperCase().replace(/^ROLE_/, '');
+      if (uRole === target) return true;
+    }
+
+    // 2. Roles array (e.g. user.roles === ['ADMIN'] or ['ROLE_ADMIN'])
+    if (Array.isArray(state.user.roles)) {
+      if (state.user.roles.some(r => String(r).toUpperCase().replace(/^ROLE_/, '') === target)) {
+        return true;
+      }
+    }
+
+    // 3. Spring Security Authorities array (e.g. user.authorities === [{ authority: 'ROLE_ADMIN' }])
+    if (Array.isArray(state.user.authorities)) {
+      if (state.user.authorities.some(a => String(a.authority || a).toUpperCase().replace(/^ROLE_/, '') === target)) {
+        return true;
+      }
+    }
+
+    return false;
   };
 
   // Check if user is admin

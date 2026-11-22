@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -18,7 +19,7 @@ public interface UserRepository extends JpaRepository<User, String> {
     boolean existsByEmailAndIsVerifiedTrue(String email);
 
     boolean existsByUsernameAndIsVerifiedTrue(String username);
-    
+
     boolean existsByEmailAndIsVerifiedFalse(String email);
 
     @Transactional
@@ -29,4 +30,8 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Modifying
     void deleteByUsernameAndIsVerifiedFalse(String username);
 
+    List<User> findByUsernameContainingIgnoreCaseOrFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
+            String username, String firstName, String lastName);
+
+    List<User> findTop10ByOrderByCreatedAtDesc();
 }

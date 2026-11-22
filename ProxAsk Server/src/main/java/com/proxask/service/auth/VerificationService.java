@@ -1,6 +1,5 @@
 package com.proxask.service.auth;
 
-
 import com.proxask.entity.EmailVerification;
 import com.proxask.entity.User;
 import com.proxask.exception.UserAlreadyVerifiedException;
@@ -24,37 +23,33 @@ public class VerificationService {
     private final VerificationSupportService verificationSupportService;
     private final OtpService otpService;
 
-
-    public EmailVerification getEmailVerification(User user){
+    public EmailVerification getEmailVerification(User user) {
         return emailVerificationRepository.findByUser(user).orElseThrow(() ->
-                 new VerificationException("Email Verification details not found"));
+                new VerificationException("Email verification details not found"));
     }
 
-
-    public void isTokenExpired(EmailVerification emailVerification){
-        if(emailVerification.getExpiryDate().isBefore(LocalDateTime.now()))
-            throw new VerificationException("Verification token has expired");
-
+    public void isTokenExpired(EmailVerification emailVerification) {
+        if (emailVerification.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new VerificationException("Verification token has expired. Please request a new one.");
+        }
     }
 
-    public void isAccountVerified(User user){
-        if(Boolean.TRUE.equals(user.getIsVerified()))
+    public void isAccountVerified(User user) {
+        if (Boolean.TRUE.equals(user.getIsVerified())) {
             throw new UserAlreadyVerifiedException("This account has already been verified.");
+        }
     }
-
-
 
     @Transactional
-    public void verify(String email, int otp){
+    public void verify(String email, int otp) {
         User user = userService.getUserByEmail(email);
         isAccountVerified(user);
 
         EmailVerification emailVerification = getEmailVerification(user);
         isTokenExpired(emailVerification);
-
         verificationSupportService.isMaxAttemptsExceeded(emailVerification);
 
-        if(emailVerification.getOtp() != otp){
+        if (emailVerification.getOtp() != otp) {
             verificationSupportService.incrementFailedAttempts(emailVerification);
             throw new VerificationException("The OTP you entered is incorrect.");
         }
@@ -64,16 +59,14 @@ public class VerificationService {
         emailVerificationRepository.delete(emailVerification);
     }
 
-    public EmailVerification findEmailVerificationByToken(String token){
+    public EmailVerification findEmailVerificationByToken(String token) {
         return emailVerificationRepository.findByVerificationToken(token).orElseThrow(() ->
-                new VerificationException("The Verification token is invalid."));
-
+                new VerificationException("The verification token is invalid."));
     }
 
     @Transactional
-    public void verify(String token){
+    public void verify(String token) {
         EmailVerification emailVerification = findEmailVerificationByToken(token);
-
         isTokenExpired(emailVerification);
         verificationSupportService.isMaxAttemptsExceeded(emailVerification);
 
@@ -83,17 +76,19 @@ public class VerificationService {
         emailVerificationRepository.delete(emailVerification);
     }
 
-    public void resendOtp(String email){
+    public void resendOtp(String email) {
         User user = userService.getUserByEmail(email);
         isAccountVerified(user);
 
-        EmailVerification emailVerification = getEmailVerification(user);
-        if(emailVerification.getExpiryDate().minusMinutes(8).isBefore(LocalDateTime.now()))
-            throw new VerificationException("Please wait 120 seconds before requesting a new OTP.");
+        emailVerificationRepository.findByUser(user).ifPresent(emailVerification -> {
+            // Rate limit: must wait at least 2 minutes after issuance before resending
+            // expiryDate is set to now + 10 mins; minus 8 mins = creation time + 2 mins
+            if (emailVerification.getExpiryDate().minusMinutes(8).isAfter(LocalDateTime.now())) {
+                throw new VerificationException("Please wait 120 seconds before requesting a new OTP.");
+            }
+            verificationSupportService.deleteEmailVerification(emailVerification);
+        });
 
-        verificationSupportService.deleteEmailVerification(emailVerification);
         otpService.sendOtp(user);
     }
-
-
 }

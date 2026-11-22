@@ -1,37 +1,90 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  FiUser, 
-  FiMail, 
-  FiLock, 
-  FiEye, 
-  FiEyeOff, 
-  FiArrowRight,
-  FiCheck 
-} from 'react-icons/fi';
+  User, 
+  Mail, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  ArrowRight, 
+  Sparkles,
+  Sun,
+  Moon,
+  Check,
+  ShieldCheck,
+  AlertCircle
+} from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useNotifications } from '../../../context/NotificationContext';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { useTheme } from '../../../context/ThemeContext';
+import Button from '../../../components/common/Button';
+import Badge from '../../../components/common/Badge';
+import Card from '../../../components/common/Card';
 import './SignupPage.css';
+
+// Sanitize backend messages and convert technical exceptions into friendly explanations
+const formatRegistrationError = (rawError) => {
+  if (!rawError) return 'An unexpected error occurred during registration. Please try again.';
+  const str = String(rawError).toLowerCase();
+
+  if (str.includes('network') || str.includes('connection') || str.includes('failed to fetch') || str.includes('timeout')) {
+    return 'Network connection failure. Server is currently unreachable, please check your connection.';
+  }
+  if (str.includes('username') && (str.includes('already') || str.includes('exist') || str.includes('taken') || str.includes('duplicate'))) {
+    return 'This username is already taken. Please choose a different username.';
+  }
+  if (str.includes('email') && (str.includes('already') || str.includes('exist') || str.includes('taken') || str.includes('duplicate'))) {
+    return 'An account with this email address already exists. Please log in or use a different email.';
+  }
+  if (str.includes('password') && (str.includes('requirement') || str.includes('short') || str.includes('weak') || str.includes('character'))) {
+    return 'Password does not meet security requirements. It must contain at least 8 characters.';
+  }
+  if (str.includes('required') || str.includes('missing')) {
+    return 'All registration fields are required. Please check your information.';
+  }
+  // Strip any java class names or stack trace artifacts
+  const clean = String(rawError)
+    .replace(/^.*Exception:\s*/i, '')
+    .replace(/at\s+[\w$.]+\([\w$.]+:\d+\)/g, '')
+    .trim();
+
+  return clean.length > 0 && clean.length < 150 
+    ? clean 
+    : 'Registration could not be completed. Please check your details and try again.';
+};
 
 const SignupPage = () => {
   const navigate = useNavigate();
-  const { register, loading, error, clearError } = useAuth();
+  const { register, clearError, isAuthenticated } = useAuth();
   const { showSuccess, showError } = useNotifications();
-  
+  const { isDark, toggleTheme } = useTheme();
+
+  // Gracefully fallback to '/' if browser back is pressed with no prior in-app history
+  useEffect(() => {
+    const handlePopState = (e) => {
+      if (!e.state || (typeof e.state.idx === 'number' && e.state.idx <= 0)) {
+        // Safe check
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [navigate]);
+
   const [formData, setFormData] = useState({
-    firstname: '',
-    lastname: '',
+    firstName: '',
+    lastName: '',
     username: '',
     email: '',
     password: '',
     confirmPassword: ''
   });
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+  const [serverError, setServerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [passwordStrength, setPasswordStrength] = useState({
     score: 0,
     checks: {
@@ -44,73 +97,64 @@ const SignupPage = () => {
   });
 
   useEffect(() => {
-    clearError();
+    if (clearError) clearError();
   }, [clearError]);
 
+  // Compute password strength whenever password changes
   useEffect(() => {
-    if (Object.keys(formErrors).length > 0) {
-      setFormErrors({});
-    }
-  }, [formData]);
-
-  // Password strength checker
-  useEffect(() => {
-    const password = formData.password;
+    const pwd = formData.password;
     const checks = {
-      length: password.length >= 8,
-      uppercase: /[A-Z]/.test(password),
-      lowercase: /[a-z]/.test(password),
-      number: /\d/.test(password),
-      special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+      length: pwd.length >= 8,
+      uppercase: /[A-Z]/.test(pwd),
+      lowercase: /[a-z]/.test(pwd),
+      number: /\d/.test(pwd),
+      special: /[@$!%*?&#^()_+\-=[\]{};':"\\|,.<>/?]/.test(pwd)
     };
-    
-    const score = Object.values(checks).filter(Boolean).length;
-    setPasswordStrength({ score, checks });
+
+    const metCount = Object.values(checks).filter(Boolean).length;
+    setPasswordStrength({
+      score: pwd.length === 0 ? 0 : metCount,
+      checks
+    });
   }, [formData.password]);
 
-  const validateForm = () => {
+  const handleChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (formErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: null }));
+    }
+    if (serverError) {
+      setServerError('');
+    }
+  };
+
+  const validate = () => {
     const errors = {};
+    if (!formData.firstName.trim()) errors.firstName = 'First name is required';
+    if (!formData.lastName.trim()) errors.lastName = 'Last name is required';
 
-    // First name validation
-    if (!formData.firstname.trim()) {
-      errors.firstname = 'First name is required';
-    } else if (formData.firstname.trim().length < 2) {
-      errors.firstname = 'First name must be at least 2 characters';
-    }
-
-    // Last name validation
-    if (!formData.lastname.trim()) {
-      errors.lastname = 'Last name is required';
-    } else if (formData.lastname.trim().length < 2) {
-      errors.lastname = 'Last name must be at least 2 characters';
-    }
-
-    // Username validation
     if (!formData.username.trim()) {
       errors.username = 'Username is required';
     } else if (formData.username.trim().length < 3) {
       errors.username = 'Username must be at least 3 characters';
-    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
-      errors.username = 'Username can only contain letters, numbers, and underscores';
+    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username.trim())) {
+      errors.username = 'Only letters, numbers, and underscores allowed';
     }
 
-    // Email validation
     if (!formData.email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Email address is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
       errors.email = 'Please enter a valid email address';
     }
 
-    // Password validation
     if (!formData.password) {
       errors.password = 'Password is required';
-    } else if (passwordStrength.score < 3) {
-      errors.password = 'Password is too weak. Please make it stronger.';
+    } else if (formData.password.length < 8) {
+      errors.password = 'Password must be at least 8 characters';
     }
 
-    // Confirm password validation
     if (!formData.confirmPassword) {
-      errors.confirmPassword = 'Please confirm your password';
+      errors.confirmPassword = 'Confirm your password';
     } else if (formData.password !== formData.confirmPassword) {
       errors.confirmPassword = 'Passwords do not match';
     }
@@ -118,405 +162,288 @@ const SignupPage = () => {
     return errors;
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    const errors = validateForm();
+    if (isSubmitting) return; // Prevent duplicate submissions
+
+    const errors = validate();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       return;
     }
 
+    setServerError('');
     setIsSubmitting(true);
-    
+
     try {
-      const result = await register({
-        firstname: formData.firstname.trim(),
-        lastname: formData.lastname.trim(),
-        username: formData.username.trim(),
-        email: formData.email.trim(),
+      const payload = {
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        username: formData.username.trim().toLowerCase(),
+        email: formData.email.trim().toLowerCase(),
         password: formData.password
-      });
-      
-      if (result.success) {
-        showSuccess(result.message);
+      };
+
+      const result = await register(payload);
+
+      if (result && result.success) {
+        showSuccess({
+          title: 'Account created successfully',
+          message: 'Welcome to ProxAsk! Your account has been created. Please enter the verification code sent to your email.'
+        });
         navigate('/verify-email', { 
-          state: { email: formData.email.trim() }
+          state: { email: formData.email.trim().toLowerCase() } 
         });
       } else {
-        showError(result.error || 'Registration failed. Please try again.');
+        const errorMsg = formatRegistrationError(result?.error);
+        setServerError(errorMsg);
+        showError({
+          title: 'Registration failed',
+          message: errorMsg
+        });
       }
     } catch (err) {
-      showError('An unexpected error occurred. Please try again.');
+      const rawMsg = err.response?.data?.message || err.message;
+      const errorMsg = formatRegistrationError(rawMsg);
+      setServerError(errorMsg);
+      showError({
+        title: 'Registration failed',
+        message: errorMsg
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(!showConfirmPassword);
-  };
-
-  const getPasswordStrengthLabel = () => {
-    switch (passwordStrength.score) {
-      case 0:
-      case 1:
-        return 'Very Weak';
-      case 2:
-        return 'Weak';
-      case 3:
-        return 'Good';
-      case 4:
-        return 'Strong';
-      case 5:
-        return 'Very Strong';
-      default:
-        return 'Very Weak';
-    }
-  };
-
-  const getPasswordStrengthColor = () => {
-    switch (passwordStrength.score) {
-      case 0:
-      case 1:
-        return '#ef4444';
-      case 2:
-        return '#f97316';
-      case 3:
-        return '#eab308';
-      case 4:
-        return '#22c55e';
-      case 5:
-        return '#16a34a';
-      default:
-        return '#ef4444';
-    }
-  };
-
   return (
-    <div className="proxask-signup-page">
-      <div className="proxask-signup-container">
-        {/* Left Side - Form */}
-        <div className="proxask-signup-form-container">
-          <div className="proxask-signup-form-wrapper">
-            <div className="proxask-signup-form-header">
-              <h1 className="proxask-signup-form-title">Create Account</h1>
-              <p className="proxask-signup-form-subtitle">
-                Join Proxask and start asking questions anonymously
-              </p>
+    <div className="px-auth">
+      {/* Top Bar */}
+      <div className="px-auth__topbar">
+        <Link to={isAuthenticated ? "/dashboard" : "/"} className="px-auth__brand" aria-label="ProxAsk Home">
+          <div className="px-auth__brand-badge font-mono">P</div>
+          <span className="px-auth__brand-name">Prox<span className="px-auth__brand-accent">Ask</span></span>
+        </Link>
+
+        <button
+          type="button"
+          className="px-auth__theme-btn"
+          onClick={toggleTheme}
+          title={isDark ? 'Switch to Light' : 'Switch to Dark'}
+        >
+          {isDark ? <Sun size={17} /> : <Moon size={17} />}
+        </button>
+      </div>
+
+      {/* Main Center Card */}
+      <div className="px-auth__container">
+        <Card className="px-auth__card px-auth__card--wide">
+          <div className="px-auth__card-header">
+            <div className="px-auth__badge-wrap">
+              <Badge variant="teal" size="sm" icon={<Sparkles size={11} />}>
+                JOIN PROXASK
+              </Badge>
+            </div>
+            <h1 className="px-auth__title">Create Your Account</h1>
+            <p className="px-auth__subtitle">
+              Start asking and receiving anonymous or verified questions today.
+            </p>
+          </div>
+
+          {serverError && (
+            <div className="px-auth__error-alert" data-testid="signup-server-error" role="alert">
+              <AlertCircle size={16} className="px-auth__error-alert-icon" />
+              <div className="px-auth__error-alert-text">
+                <strong>Registration failed: </strong>
+                <span>{serverError}</span>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="px-auth__form">
+            {/* First & Last Name */}
+            <div className="px-auth__grid">
+              <div className={`px-input-group ${formErrors.firstName ? 'px-input-group--error' : ''}`}>
+                <label className="px-input-label">First Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Alex"
+                  value={formData.firstName}
+                  onChange={(e) => handleChange('firstName', e.target.value)}
+                  className="px-input"
+                  disabled={isSubmitting}
+                  autoComplete="given-name"
+                />
+                {formErrors.firstName && (
+                  <span className="px-input-error">{formErrors.firstName}</span>
+                )}
+              </div>
+
+              <div className={`px-input-group ${formErrors.lastName ? 'px-input-group--error' : ''}`}>
+                <label className="px-input-label">Last Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Mercer"
+                  value={formData.lastName}
+                  onChange={(e) => handleChange('lastName', e.target.value)}
+                  className="px-input"
+                  disabled={isSubmitting}
+                  autoComplete="family-name"
+                />
+                {formErrors.lastName && (
+                  <span className="px-input-error">{formErrors.lastName}</span>
+                )}
+              </div>
             </div>
 
-            {error && (
-              <div className="proxask-signup-error">
-                {error}
+            {/* Username */}
+            <div className={`px-input-group ${formErrors.username ? 'px-input-group--error' : ''}`}>
+              <label className="px-input-label">Username</label>
+              <div className="px-input-wrapper">
+                <span className="px-input-icon px-input-icon--left">
+                  <User size={16} />
+                </span>
+                <input
+                  type="text"
+                  placeholder="e.g. alexmercer"
+                  value={formData.username}
+                  onChange={(e) => handleChange('username', e.target.value)}
+                  className="px-input px-input--has-left"
+                  disabled={isSubmitting}
+                  autoComplete="username"
+                />
               </div>
-            )}
+              {formErrors.username && (
+                <span className="px-input-error">{formErrors.username}</span>
+              )}
+            </div>
 
-            <form onSubmit={handleSubmit} className="proxask-signup-form" noValidate>
-              {/* Name Fields */}
-              <div className="proxask-signup-form-row">
-                <div className="proxask-signup-form-group">
-                  <label htmlFor="firstname" className="proxask-signup-form-label">
-                    First Name
-                  </label>
-                  <div className="proxask-signup-form-input-wrapper">
-                    <FiUser className="proxask-signup-form-input-icon" />
-                    <input
-                      type="text"
-                      id="firstname"
-                      name="firstname"
-                      value={formData.firstname}
-                      onChange={handleInputChange}
-                      className={`proxask-signup-form-input ${
-                        formErrors.firstname ? 'proxask-signup-form-input--error' : ''
-                      }`}
-                      placeholder="First name"
-                      autoComplete="given-name"
-                      disabled={isSubmitting || loading}
-                    />
+            {/* Email */}
+            <div className={`px-input-group ${formErrors.email ? 'px-input-group--error' : ''}`}>
+              <label className="px-input-label">Email Address</label>
+              <div className="px-input-wrapper">
+                <span className="px-input-icon px-input-icon--left">
+                  <Mail size={16} />
+                </span>
+                <input
+                  type="email"
+                  placeholder="e.g. alex@example.com"
+                  value={formData.email}
+                  onChange={(e) => handleChange('email', e.target.value)}
+                  className="px-input px-input--has-left"
+                  disabled={isSubmitting}
+                  autoComplete="email"
+                />
+              </div>
+              {formErrors.email && (
+                <span className="px-input-error">{formErrors.email}</span>
+              )}
+            </div>
+
+            {/* Password */}
+            <div className={`px-input-group ${formErrors.password ? 'px-input-group--error' : ''}`}>
+              <label className="px-input-label">Password</label>
+              <div className="px-input-wrapper">
+                <span className="px-input-icon px-input-icon--left">
+                  <Lock size={16} />
+                </span>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="At least 8 characters"
+                  value={formData.password}
+                  onChange={(e) => handleChange('password', e.target.value)}
+                  className="px-input px-input--has-left px-input--has-right"
+                  disabled={isSubmitting}
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  className="px-input-icon px-input-icon--right"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              {formErrors.password && (
+                <span className="px-input-error">{formErrors.password}</span>
+              )}
+
+              {/* Real-time Strength Meter */}
+              {formData.password.length > 0 && (
+                <div className="px-auth__strength">
+                  <div className="px-auth__strength-meter">
+                    <div className={`px-auth__strength-fill px-auth__strength-fill--${passwordStrength.score}`} />
                   </div>
-                  {formErrors.firstname && (
-                    <span className="proxask-signup-form-error">{formErrors.firstname}</span>
-                  )}
-                </div>
-
-                <div className="proxask-signup-form-group">
-                  <label htmlFor="lastname" className="proxask-signup-form-label">
-                    Last Name
-                  </label>
-                  <div className="proxask-signup-form-input-wrapper">
-                    <FiUser className="proxask-signup-form-input-icon" />
-                    <input
-                      type="text"
-                      id="lastname"
-                      name="lastname"
-                      value={formData.lastname}
-                      onChange={handleInputChange}
-                      className={`proxask-signup-form-input ${
-                        formErrors.lastname ? 'proxask-signup-form-input--error' : ''
-                      }`}
-                      placeholder="Last name"
-                      autoComplete="family-name"
-                      disabled={isSubmitting || loading}
-                    />
-                  </div>
-                  {formErrors.lastname && (
-                    <span className="proxask-signup-form-error">{formErrors.lastname}</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Username Field */}
-              <div className="proxask-signup-form-group">
-                <label htmlFor="username" className="proxask-signup-form-label">
-                  Username
-                </label>
-                <div className="proxask-signup-form-input-wrapper">
-                  <span className="proxask-signup-form-username-prefix">@</span>
-                  <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleInputChange}
-                    className={`proxask-signup-form-input proxask-signup-form-input--with-prefix ${
-                      formErrors.username ? 'proxask-signup-form-input--error' : ''
-                    }`}
-                    placeholder="username"
-                    autoComplete="username"
-                    disabled={isSubmitting || loading}
-                  />
-                </div>
-                {formErrors.username && (
-                  <span className="proxask-signup-form-error">{formErrors.username}</span>
-                )}
-              </div>
-
-              {/* Email Field */}
-              <div className="proxask-signup-form-group">
-                <label htmlFor="email" className="proxask-signup-form-label">
-                  Email Address
-                </label>
-                <div className="proxask-signup-form-input-wrapper">
-                  <FiMail className="proxask-signup-form-input-icon" />
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className={`proxask-signup-form-input ${
-                      formErrors.email ? 'proxask-signup-form-input--error' : ''
-                    }`}
-                    placeholder="Enter your email"
-                    autoComplete="email"
-                    disabled={isSubmitting || loading}
-                  />
-                </div>
-                {formErrors.email && (
-                  <span className="proxask-signup-form-error">{formErrors.email}</span>
-                )}
-              </div>
-
-              {/* Password Field */}
-              <div className="proxask-signup-form-group">
-                <label htmlFor="password" className="proxask-signup-form-label">
-                  Password
-                </label>
-                <div className="proxask-signup-form-input-wrapper">
-                  <FiLock className="proxask-signup-form-input-icon" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className={`proxask-signup-form-input ${
-                      formErrors.password ? 'proxask-signup-form-input--error' : ''
-                    }`}
-                    placeholder="Create a password"
-                    autoComplete="new-password"
-                    disabled={isSubmitting || loading}
-                  />
-                  <button
-                    type="button"
-                    onClick={togglePasswordVisibility}
-                    className="proxask-signup-form-password-toggle"
-                    title={showPassword ? 'Hide password' : 'Show password'}
-                    disabled={isSubmitting || loading}
-                  >
-                    {showPassword ? <FiEyeOff /> : <FiEye />}
-                  </button>
-                </div>
-                
-                {/* Password Strength Indicator */}
-                {formData.password && (
-                  <div className="proxask-signup-password-strength">
-                    <div className="proxask-signup-password-strength-bar">
-                      <div 
-                        className="proxask-signup-password-strength-fill"
-                        style={{
-                          width: `${(passwordStrength.score / 5) * 100}%`,
-                          backgroundColor: getPasswordStrengthColor()
-                        }}
-                      />
-                    </div>
-                    <span 
-                      className="proxask-signup-password-strength-label"
-                      style={{ color: getPasswordStrengthColor() }}
-                    >
-                      {getPasswordStrengthLabel()}
+                  <div className="px-auth__strength-checks">
+                    <span className={`px-auth__strength-check ${passwordStrength.checks.length ? 'px-auth__strength-check--met' : ''}`}>
+                      <span className="px-auth__check-dot" /> 8+ chars
+                    </span>
+                    <span className={`px-auth__strength-check ${passwordStrength.checks.uppercase ? 'px-auth__strength-check--met' : ''}`}>
+                      <span className="px-auth__check-dot" /> Uppercase
+                    </span>
+                    <span className={`px-auth__strength-check ${passwordStrength.checks.lowercase ? 'px-auth__strength-check--met' : ''}`}>
+                      <span className="px-auth__check-dot" /> Lowercase
+                    </span>
+                    <span className={`px-auth__strength-check ${passwordStrength.checks.number ? 'px-auth__strength-check--met' : ''}`}>
+                      <span className="px-auth__check-dot" /> Number
                     </span>
                   </div>
-                )}
-
-                {/* Password Requirements */}
-                {formData.password && (
-                  <div className="proxask-signup-password-requirements">
-                    <div className={`proxask-signup-password-requirement ${
-                      passwordStrength.checks.length ? 'proxask-signup-password-requirement--met' : ''
-                    }`}>
-                      <FiCheck className="proxask-signup-password-requirement-icon" />
-                      At least 8 characters
-                    </div>
-                    <div className={`proxask-signup-password-requirement ${
-                      passwordStrength.checks.uppercase ? 'proxask-signup-password-requirement--met' : ''
-                    }`}>
-                      <FiCheck className="proxask-signup-password-requirement-icon" />
-                      One uppercase letter
-                    </div>
-                    <div className={`proxask-signup-password-requirement ${
-                      passwordStrength.checks.lowercase ? 'proxask-signup-password-requirement--met' : ''
-                    }`}>
-                      <FiCheck className="proxask-signup-password-requirement-icon" />
-                      One lowercase letter
-                    </div>
-                    <div className={`proxask-signup-password-requirement ${
-                      passwordStrength.checks.number ? 'proxask-signup-password-requirement--met' : ''
-                    }`}>
-                      <FiCheck className="proxask-signup-password-requirement-icon" />
-                      One number
-                    </div>
-                  </div>
-                )}
-
-                {formErrors.password && (
-                  <span className="proxask-signup-form-error">{formErrors.password}</span>
-                )}
-              </div>
-
-              {/* Confirm Password Field */}
-              <div className="proxask-signup-form-group">
-                <label htmlFor="confirmPassword" className="proxask-signup-form-label">
-                  Confirm Password
-                </label>
-                <div className="proxask-signup-form-input-wrapper">
-                  <FiLock className="proxask-signup-form-input-icon" />
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    className={`proxask-signup-form-input ${
-                      formErrors.confirmPassword ? 'proxask-signup-form-input--error' : ''
-                    }`}
-                    placeholder="Confirm your password"
-                    autoComplete="new-password"
-                    disabled={isSubmitting || loading}
-                  />
-                  <button
-                    type="button"
-                    onClick={toggleConfirmPasswordVisibility}
-                    className="proxask-signup-form-password-toggle"
-                    title={showConfirmPassword ? 'Hide password' : 'Show password'}
-                    disabled={isSubmitting || loading}
-                  >
-                    {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-                  </button>
                 </div>
-                {formErrors.confirmPassword && (
-                  <span className="proxask-signup-form-error">{formErrors.confirmPassword}</span>
-                )}
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                className="proxask-signup-submit-btn"
-                disabled={isSubmitting || loading}
-              >
-                {isSubmitting || loading ? (
-                  <LoadingSpinner size="small" />
-                ) : (
-                  <>
-                    Create Account
-                    <FiArrowRight className="proxask-signup-submit-icon" />
-                  </>
-                )}
-              </button>
-            </form>
-
-            {/* Login Link */}
-            <div className="proxask-signup-login-link">
-              <p>
-                Already have an account?{' '}
-                <Link to="/login" className="proxask-signup-login-link-text">
-                  Sign in here
-                </Link>
-              </p>
+              )}
             </div>
-          </div>
-        </div>
 
-        {/* Right Side - Info */}
-        <div className="proxask-signup-info">
-          <div className="proxask-signup-info-content">
-            <h2 className="proxask-signup-info-title">Why Join Proxask?</h2>
-            <div className="proxask-signup-info-features">
-              <div className="proxask-signup-info-feature">
-                <div className="proxask-signup-info-feature-icon">🔐</div>
-                <div>
-                  <h3>Complete Privacy</h3>
-                  <p>Ask questions anonymously without revealing your identity</p>
-                </div>
+            {/* Confirm Password */}
+            <div className={`px-input-group ${formErrors.confirmPassword ? 'px-input-group--error' : ''}`}>
+              <label className="px-input-label">Confirm Password</label>
+              <div className="px-input-wrapper">
+                <span className="px-input-icon px-input-icon--left">
+                  <Lock size={16} />
+                </span>
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="Re-type password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => handleChange('confirmPassword', e.target.value)}
+                  className="px-input px-input--has-left px-input--has-right"
+                  disabled={isSubmitting}
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  className="px-input-icon px-input-icon--right"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
-              <div className="proxask-signup-info-feature">
-                <div className="proxask-signup-info-feature-icon">💬</div>
-                <div>
-                  <h3>Real-time Chat</h3>
-                  <p>Connect with others through instant messaging</p>
-                </div>
-              </div>
-              <div className="proxask-signup-info-feature">
-                <div className="proxask-signup-info-feature-icon">🌍</div>
-                <div>
-                  <h3>Global Community</h3>
-                  <p>Join thousands of users sharing knowledge worldwide</p>
-                </div>
-              </div>
-              <div className="proxask-signup-info-feature">
-                <div className="proxask-signup-info-feature-icon">⚡</div>
-                <div>
-                  <h3>Instant Answers</h3>
-                  <p>Get quick responses from knowledgeable community members</p>
-                </div>
-              </div>
+              {formErrors.confirmPassword && (
+                <span className="px-input-error">{formErrors.confirmPassword}</span>
+              )}
             </div>
+
+            {/* Submit */}
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              className="px-auth__submit-btn"
+              isLoading={isSubmitting}
+              rightIcon={<ArrowRight size={16} />}
+            >
+              Create Account
+            </Button>
+          </form>
+
+          <div className="px-auth__card-footer">
+            <span className="px-auth__footer-text">
+              Already have an account?{' '}
+              <Link to="/login" className="px-auth__footer-link">
+                Sign in
+              </Link>
+            </span>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

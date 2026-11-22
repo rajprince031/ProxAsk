@@ -1,27 +1,24 @@
 package com.proxask.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.proxask.enums.FollowStatus;
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
-
 
 @Entity
-@Table(name = "follows")
+@Table(name = "follows", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"follower_id", "following_id"})
+})
 @Data
+@NoArgsConstructor
 public class Follow {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-
-    private Follow(){
-    }
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "follower_id", nullable = false)
@@ -33,13 +30,23 @@ public class Follow {
     @JsonBackReference
     private User following;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private FollowStatus status = FollowStatus.ACCEPTED;
+
     public Follow(User follower, User following) {
         this.follower = follower;
         this.following = following;
+        this.status = FollowStatus.ACCEPTED;
+    }
+
+    public Follow(User follower, User following, FollowStatus status) {
+        this.follower = follower;
+        this.following = following;
+        this.status = status;
     }
 
     @CreationTimestamp
-    @JoinColumn(name = "followed_at")
+    @Column(name = "followed_at")
     private LocalDateTime followedAt;
-
 }

@@ -1,192 +1,203 @@
 import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  FiHome, 
-  FiCompass, 
-  FiMessageCircle, 
-  FiBell, 
-  FiUsers, 
-  FiSettings,
-  FiPlusCircle,
-  FiShield,
-  FiChevronLeft,
-  FiChevronRight
-} from 'react-icons/fi';
+  Home, 
+  Compass, 
+  HelpCircle, 
+  Users, 
+  Bell, 
+  User, 
+  Settings, 
+  Shield, 
+  LogOut,
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useNotifications } from '../../../context/NotificationContext';
+import Avatar from '../../common/Avatar';
 import './Sidebar.css';
 
-const Sidebar = () => {
+const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
   const location = useLocation();
-  const { user, isAdmin } = useAuth();
+  const navigate = useNavigate();
+  const { user, logout, isAdmin } = useAuth();
   const { unreadCount } = useNotifications();
   const [isCollapsed, setIsCollapsed] = useState(false);
-
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
 
   const navigationItems = [
     {
       path: '/dashboard',
-      icon: FiHome,
-      label: 'Home',
+      icon: Home,
+      label: 'Home Feed',
       exact: true
     },
     {
       path: '/explore',
-      icon: FiCompass,
+      icon: Compass,
       label: 'Explore'
     },
     {
-      path: '/messages',
-      icon: FiMessageCircle,
-      label: 'Messages'
+      path: '/ask',
+      icon: HelpCircle,
+      label: 'Ask a Question'
+    },
+    {
+      path: '/followers',
+      icon: Users,
+      label: 'Connections'
     },
     {
       path: '/notifications',
-      icon: FiBell,
+      icon: Bell,
       label: 'Notifications',
       badge: unreadCount > 0 ? (unreadCount > 99 ? '99+' : unreadCount) : null
     },
     {
-      path: '/followers',
-      icon: FiUsers,
-      label: 'Followers'
-    }
-  ];
-
-  const actionItems = [
-    {
-      path: '/ask',
-      icon: FiPlusCircle,
-      label: 'Ask Question',
-      isAction: true
-    }
-  ];
-
-  const settingsItems = [
+      path: '/profile',
+      icon: User,
+      label: 'My Profile'
+    },
     {
       path: '/settings',
-      icon: FiSettings,
+      icon: Settings,
       label: 'Settings'
     }
   ];
 
-  // Add admin item if user is admin
-  if (isAdmin()) {
-    settingsItems.unshift({
+  if (isAdmin && isAdmin()) {
+    navigationItems.push({
       path: '/admin',
-      icon: FiShield,
-      label: 'Admin Panel'
+      icon: Shield,
+      label: 'Admin Console',
+      badge: 'ADMIN',
+      isAdminItem: true
     });
   }
 
-  const renderNavItem = (item) => {
-    const IconComponent = item.icon;
-    const isActive = item.exact 
-      ? location.pathname === item.path 
-      : location.pathname.startsWith(item.path);
-
-    return (
-      <NavLink
-        key={item.path}
-        to={item.path}
-        className={`proxask-sidebar__nav-item ${
-          item.isAction ? 'proxask-sidebar__nav-item--action' : ''
-        } ${isActive ? 'proxask-sidebar__nav-item--active' : ''}`}
-        title={isCollapsed ? item.label : ''}
-      >
-        <div className="proxask-sidebar__nav-item-icon">
-          <IconComponent />
-          {item.badge && (
-            <span className="proxask-sidebar__nav-badge">
-              {item.badge}
-            </span>
-          )}
-        </div>
-        {!isCollapsed && (
-          <span className="proxask-sidebar__nav-item-label">
-            {item.label}
-          </span>
-        )}
-      </NavLink>
-    );
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   return (
     <>
-      <aside className={`proxask-sidebar ${isCollapsed ? 'proxask-sidebar--collapsed' : ''}`}>
-        <div className="proxask-sidebar__content">
-          {/* Toggle Button */}
-          <button
-            onClick={toggleSidebar}
-            className="proxask-sidebar__toggle"
-            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {isCollapsed ? <FiChevronRight /> : <FiChevronLeft />}
-          </button>
+      {/* Mobile backdrop */}
+      {isMobileOpen && (
+        <div className="px-sidebar__mobile-backdrop" onClick={onCloseMobile} />
+      )}
 
-          {/* Main Navigation */}
-          <nav className="proxask-sidebar__nav">
-            <div className="proxask-sidebar__nav-section">
-              {!isCollapsed && (
-                <h3 className="proxask-sidebar__nav-section-title">Navigation</h3>
-              )}
-              {navigationItems.map(renderNavItem)}
-            </div>
+      <aside
+        className={`px-sidebar ${isCollapsed ? 'px-sidebar--collapsed' : ''} ${
+          isMobileOpen ? 'px-sidebar--mobile-open' : ''
+        }`}
+      >
+        {/* Navigation Section */}
+        <div className="px-sidebar__section">
+          <div className="px-sidebar__nav-list">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = item.exact
+                ? location.pathname === item.path
+                : location.pathname.startsWith(item.path);
 
-            {/* Action Items */}
-            <div className="proxask-sidebar__nav-section">
-              {!isCollapsed && (
-                <h3 className="proxask-sidebar__nav-section-title">Actions</h3>
-              )}
-              {actionItems.map(renderNavItem)}
-            </div>
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  onClick={onCloseMobile}
+                  className={`px-sidebar__nav-item ${isActive ? 'px-sidebar__nav-item--active' : ''} ${
+                    item.isAdminItem ? 'px-sidebar__nav-item--admin' : ''
+                  }`}
+                  title={isCollapsed ? item.label : undefined}
+                >
+                  <span className="px-sidebar__nav-icon">
+                    <Icon size={18} />
+                  </span>
+                  
+                  {!isCollapsed && (
+                    <>
+                      <span className="px-sidebar__nav-label">{item.label}</span>
+                      {item.badge && (
+                        <span className={`px-sidebar__nav-badge font-mono ${
+                          item.isAdminItem ? 'px-sidebar__nav-badge--admin' : ''
+                        }`}>
+                          {item.badge}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              );
+            })}
+          </div>
+        </div>
 
-            {/* Settings */}
-            <div className="proxask-sidebar__nav-section proxask-sidebar__nav-section--bottom">
-              {!isCollapsed && (
-                <h3 className="proxask-sidebar__nav-section-title">Settings</h3>
-              )}
-              {settingsItems.map(renderNavItem)}
-            </div>
-          </nav>
-
-          {/* User Info (when not collapsed) */}
-          {!isCollapsed && (
-            <div className="proxask-sidebar__user">
-              <div className="proxask-sidebar__user-avatar">
-                {user?.profilePicture ? (
-                  <img
-                    src={user.profilePicture}
-                    alt={user.firstname}
-                    className="proxask-sidebar__user-image"
-                  />
-                ) : (
-                  <div className="proxask-sidebar__user-initials">
-                    {user?.firstname?.charAt(0)?.toUpperCase() || 'U'}
+        {/* Bottom Section */}
+        <div className="px-sidebar__footer">
+          {/* User Preview or Guest Prompt */}
+          {user ? (
+            <div className="px-sidebar__user-box">
+              <NavLink to="/profile" className="px-sidebar__user-link" onClick={onCloseMobile}>
+                <Avatar
+                  src={user?.avatar}
+                  name={`${user?.firstName || ''} ${user?.lastName || ''}`}
+                  username={user?.username}
+                  size="sm"
+                />
+                {!isCollapsed && (
+                  <div className="px-sidebar__user-info">
+                    <span className="px-sidebar__user-name">
+                      {user?.firstName} {user?.lastName}
+                    </span>
+                    <span className="px-sidebar__user-handle font-mono">
+                      @{user?.username}
+                    </span>
                   </div>
                 )}
-              </div>
-              <div className="proxask-sidebar__user-info">
-                <p className="proxask-sidebar__user-name">
-                  {user?.firstname} {user?.lastname}
-                </p>
-                <p className="proxask-sidebar__user-username">
-                  @{user?.username}
-                </p>
-              </div>
+              </NavLink>
+
+              {!isCollapsed && (
+                <button
+                  type="button"
+                  className="px-sidebar__logout-btn"
+                  onClick={handleLogout}
+                  title="Sign Out"
+                  aria-label="Sign Out"
+                >
+                  <LogOut size={16} />
+                </button>
+              )}
             </div>
+          ) : (
+            !isCollapsed && (
+              <div className="px-sidebar__guest-footer">
+                <span className="px-sidebar__guest-text font-mono">PROXASK NETWORK</span>
+                <div className="px-sidebar__guest-actions">
+                  <NavLink to="/login" className="px-btn px-btn--outline px-btn--sm" onClick={onCloseMobile}>
+                    Log In
+                  </NavLink>
+                  <NavLink to="/signup" className="px-btn px-btn--primary px-btn--sm" onClick={onCloseMobile}>
+                    Sign Up
+                  </NavLink>
+                </div>
+              </div>
+            )
           )}
+
+          {/* Desktop Collapse Toggle */}
+          <button
+            type="button"
+            className="px-sidebar__collapse-btn"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={isCollapsed ? 'Expand' : 'Collapse'}
+          >
+            {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            {!isCollapsed && <span>Collapse Sidebar</span>}
+          </button>
         </div>
       </aside>
-
-      {/* Overlay for mobile */}
-      <div 
-        className={`proxask-sidebar__overlay ${!isCollapsed ? 'proxask-sidebar__overlay--visible' : ''}`}
-        onClick={toggleSidebar}
-      />
     </>
   );
 };

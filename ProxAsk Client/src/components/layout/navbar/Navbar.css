@@ -1,371 +1,284 @@
-/* Navbar Component Styles */
-.proxask-navbar {
-  background-color: var(--bg-primary);
-  border-bottom: 1px solid var(--border-color-light);
-  box-shadow: var(--shadow-sm);
+/* Navbar Component Styles — GitHub Light Design System */
+.px-navbar {
   position: sticky;
   top: 0;
-  z-index: 1000;
-  height: 60px;
+  z-index: 90;
+  height: var(--header-height);
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
 }
 
-.proxask-navbar__container {
-  max-width: 1200px;
-  margin: 0 auto;
+.px-navbar__container {
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--spacing-md);
+  padding: 0 var(--space-md);
+  gap: var(--space-md);
 }
 
-/* Logo Section */
-.proxask-navbar__logo {
+/* Left */
+.px-navbar__left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   flex-shrink: 0;
 }
 
-.proxask-navbar__logo-link {
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-}
-
-.proxask-navbar__logo-text {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--primary-blue);
-  letter-spacing: -0.5px;
-}
-
-/* Search Bar */
-.proxask-navbar__search {
-  flex: 1;
-  max-width: 500px;
-  margin: 0 var(--spacing-lg);
-}
-
-.proxask-navbar__search-form {
-  width: 100%;
-}
-
-.proxask-navbar__search-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  background-color: var(--bg-secondary);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.proxask-navbar__search-input-wrapper:focus-within {
-  border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px var(--primary-blue-light);
-}
-
-.proxask-navbar__search-icon {
-  position: absolute;
-  left: var(--spacing-md);
-  color: var(--text-muted);
-  font-size: var(--font-size-md);
-  z-index: 1;
-}
-
-.proxask-navbar__search-input {
-  width: 100%;
-  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-sm) 40px;
-  border: none;
-  background: transparent;
-  font-size: var(--font-size-sm);
-  color: var(--text-primary);
-  outline: none;
-}
-
-.proxask-navbar__search-input::placeholder {
-  color: var(--text-muted);
-}
-
-/* Navigation Items */
-.proxask-navbar__nav {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-}
-
-.proxask-navbar__nav-item {
-  position: relative;
-  display: flex;
+.px-navbar__mobile-toggle {
+  display: none;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
   color: var(--text-secondary);
-  text-decoration: none;
-  transition: all 0.2s ease;
-  cursor: pointer;
 }
 
-.proxask-navbar__nav-item:hover {
-  background-color: var(--bg-secondary);
+.px-navbar__mobile-toggle:hover {
+  background-color: var(--bg-surface-hover);
   color: var(--text-primary);
 }
 
-.proxask-navbar__nav-icon {
-  font-size: var(--font-size-lg);
+.px-navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* Notification Badge */
-.proxask-navbar__notification-badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background-color: #ff4757;
-  color: white;
-  font-size: 11px;
-  font-weight: var(--font-weight-semibold);
-  min-width: 18px;
-  height: 18px;
-  border-radius: 9px;
+.px-navbar__brand-badge {
+  width: 24px;
+  height: 24px;
+  background-color: var(--brand-primary);
+  color: #FFFFFF;
+  border-radius: var(--radius-xs);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.px-navbar__brand-name {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.px-navbar__brand-accent {
+  color: var(--brand-primary);
+}
+
+/* Center: Search */
+.px-navbar__center {
+  flex: 1;
+  max-width: 440px;
+}
+
+.px-navbar__search-form {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.px-navbar__search-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.px-navbar__search-input {
+  width: 100%;
+  height: 32px;
+  background-color: var(--bg-muted);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm); /* 6px */
+  padding: 0 30px;
+  font-size: 13px;
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+.px-navbar__search-input:focus {
+  outline: none;
+  background-color: var(--bg-surface);
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px var(--brand-primary-light);
+}
+
+.px-navbar__search-hint {
+  position: absolute;
+  right: 9px;
+  font-size: 11px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+/* Right */
+.px-navbar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+}
+
+.px-navbar__ask-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm); /* 6px */
+  background: var(--brand-primary);
+  color: #FFFFFF;
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  border: 1px solid var(--brand-primary);
+}
+
+.px-navbar__ask-btn:hover {
+  background: var(--brand-primary-hover);
+  border-color: var(--brand-primary-hover);
+}
+
+.px-navbar__action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.px-navbar__action-btn:hover {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.px-navbar__badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
   padding: 0 4px;
+  border-radius: var(--radius-full);
+  background-color: var(--danger);
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
 }
 
-/* Profile Section */
-.proxask-navbar__profile {
+/* Guest buttons */
+.px-navbar__guest-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Profile Wrap */
+.px-navbar__profile-wrap {
   position: relative;
 }
 
-.proxask-navbar__profile-trigger {
+.px-navbar__avatar-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  border-radius: 50%;
-  overflow: hidden;
-  transition: all 0.2s ease;
+  padding: 2px;
+  border-radius: var(--radius-full);
+  transition: opacity var(--transition-fast);
 }
 
-.proxask-navbar__profile-trigger:hover {
-  box-shadow: 0 0 0 2px var(--primary-blue-light);
+.px-navbar__avatar-btn:hover {
+  opacity: 0.85;
 }
 
-.proxask-navbar__profile-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-
-.proxask-navbar__profile-avatar {
-  width: 100%;
-  height: 100%;
-  background-color: var(--primary-blue);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-semibold);
-}
-
-/* Profile Menu */
-.proxask-navbar__profile-menu {
+.px-navbar__menu {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  width: 280px;
-  background-color: var(--bg-primary);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--border-color-light);
+  width: 220px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md); /* 8px */
+  box-shadow: var(--shadow-dropdown);
+  padding: var(--space-xs) 0;
+  z-index: 100;
+}
+
+.px-navbar__menu-header {
+  padding: var(--space-xs) var(--space-md);
+}
+
+.px-navbar__menu-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
   overflow: hidden;
-  z-index: 1001;
+  text-overflow: ellipsis;
 }
 
-.proxask-navbar__profile-menu-header {
-  padding: var(--spacing-md);
-  background-color: var(--bg-secondary);
-}
-
-.proxask-navbar__profile-menu-name {
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-  margin-bottom: 2px;
-}
-
-.proxask-navbar__profile-menu-username {
-  font-size: var(--font-size-sm);
+.px-navbar__menu-user-handle {
+  font-size: 11.5px;
   color: var(--text-secondary);
 }
 
-.proxask-navbar__profile-menu-divider {
+.px-navbar__menu-divider {
   height: 1px;
-  background-color: var(--border-color-light);
+  background-color: var(--border-color);
+  margin: var(--space-xs) 0;
 }
 
-.proxask-navbar__profile-menu-items {
-  padding: var(--spacing-sm) 0;
-}
-
-.proxask-navbar__profile-menu-item {
+.px-navbar__menu-item {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
+  gap: 8px;
+  padding: 7px var(--space-md);
+  font-size: 13px;
   color: var(--text-primary);
-  text-decoration: none;
-  font-size: var(--font-size-sm);
-  transition: background-color 0.2s ease;
-  border: none;
-  background: none;
+  transition: background-color var(--transition-fast);
   width: 100%;
   text-align: left;
-  cursor: pointer;
 }
 
-.proxask-navbar__profile-menu-item:hover {
-  background-color: var(--bg-secondary);
+.px-navbar__menu-item:hover {
+  background-color: var(--bg-surface-hover);
 }
 
-.proxask-navbar__profile-menu-item-icon {
-  font-size: var(--font-size-md);
-  color: var(--text-secondary);
+.px-navbar__menu-item--logout {
+  color: var(--danger);
 }
 
-.proxask-navbar__logout-button:hover {
-  background-color: #fff5f5;
-  color: #e53e3e;
-}
-
-.proxask-navbar__logout-button:hover .proxask-navbar__profile-menu-item-icon {
-  color: #e53e3e;
-}
-
-/* Mobile Toggle */
-.proxask-navbar__mobile-toggle {
-  display: none;
-}
-
-.proxask-navbar__mobile-toggle-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border: none;
-  background: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-lg);
-  transition: all 0.2s ease;
-}
-
-.proxask-navbar__mobile-toggle-btn:hover {
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
-}
-
-/* Mobile Menu */
-.proxask-navbar__mobile-menu {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background-color: var(--bg-primary);
-  border-bottom: 1px solid var(--border-color-light);
-  box-shadow: var(--shadow-md);
-  z-index: 999;
-}
-
-.proxask-navbar__mobile-search {
-  padding: var(--spacing-md);
-  border-bottom: 1px solid var(--border-color-light);
-}
-
-.proxask-navbar__mobile-nav {
-  padding: var(--spacing-sm) 0;
-}
-
-.proxask-navbar__mobile-nav-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
-  color: var(--text-primary);
-  text-decoration: none;
-  font-size: var(--font-size-sm);
-  transition: background-color 0.2s ease;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
-  position: relative;
-}
-
-.proxask-navbar__mobile-nav-item:hover {
-  background-color: var(--bg-secondary);
-}
-
-.proxask-navbar__mobile-nav-icon {
-  font-size: var(--font-size-md);
-  color: var(--text-secondary);
-}
-
-.proxask-navbar__mobile-logout:hover {
-  background-color: #fff5f5;
-  color: #e53e3e;
-}
-
-.proxask-navbar__mobile-logout:hover .proxask-navbar__mobile-nav-icon {
-  color: #e53e3e;
-}
-
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .proxask-navbar__search {
-    max-width: 400px;
-    margin: 0 var(--spacing-md);
-  }
+.px-navbar__menu-item--logout:hover {
+  background-color: var(--danger-light);
 }
 
 @media (max-width: 768px) {
-  .proxask-navbar__container {
-    padding: 0 var(--spacing-sm);
+  .px-navbar__mobile-toggle {
+    display: flex;
   }
-
-  .proxask-navbar__search,
-  .proxask-navbar__nav {
+  .px-navbar__center {
     display: none;
   }
-
-  .proxask-navbar__mobile-toggle {
-    display: block;
+  /* Remove duplicate top actions on mobile viewports since MobileNav
+     prominently provides central + (Ask Question) and Alerts (Notifications) */
+  .px-navbar__ask-btn {
+    display: none !important;
   }
-
-  .proxask-navbar__mobile-menu {
-    display: block;
-  }
-}
-
-@media (max-width: 480px) {
-  .proxask-navbar__logo-text {
-    font-size: var(--font-size-lg);
-  }
-  
-  .proxask-navbar__profile-menu {
-    width: calc(100vw - 32px);
-    right: var(--spacing-md);
+  .px-navbar__notif-btn {
+    display: none !important;
   }
 }

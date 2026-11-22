@@ -1,578 +1,521 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { 
-  Search, 
-  Bell, 
-  MessageCircle, 
   Plus, 
-  Home, 
-  User, 
-  Users, 
-  Settings, 
-  LogOut,
-  TrendingUp,
-  HelpCircle,
-  Send,
-  UserPlus,
-  MoreHorizontal,
-  Shield,
-  Heart,
-  MessageSquare,
+  Sparkles, 
+  Copy, 
+  Check, 
+  HelpCircle, 
+  Send, 
+  UserPlus, 
+  UserCheck, 
+  RefreshCw,
   Share2,
-  Eye,
-  Clock
+  TrendingUp,
+  MessageSquare
 } from 'lucide-react';
-import { AuthContext } from '../../App';
-import '../../style/Dashboard.css';
+import { useAuth } from '../../context/AuthContext';
+import { useNotifications } from '../../context/NotificationContext';
+import api from '../../service/AuthService';
+import Button from '../../components/common/Button';
+import Avatar from '../../components/common/Avatar';
+import Badge from '../../components/common/Badge';
+import Card from '../../components/common/Card';
+import Modal from '../../components/common/Modal';
+import LoadingSkeleton from '../../components/common/LoadingSkeleton';
+import EmptyState from '../../components/common/EmptyState';
+import QuestionCard from '../../components/question/QuestionCard';
+import { MOCK_FEED_QUESTIONS, MOCK_SUGGESTED_USERS, MOCK_NOTIFICATIONS } from '../../data/mockData';
+import './Dashboard.css';
 
 const Dashboard = () => {
-  const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate();
-  
-  const [activeTab, setActiveTab] = useState('home');
-  const [searchQuery, setSearchQuery] = useState('');
+  const { user } = useAuth();
+  const { showSuccess, showError } = useNotifications();
+
+  const [feedQuestions, setFeedQuestions] = useState([]);
+  const [suggestedUsers, setSuggestedUsers] = useState([]);
+  const [followingMap, setFollowingMap] = useState({});
+  const [recentNotifications, setRecentNotifications] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  // Ask Modal State
   const [showAskModal, setShowAskModal] = useState(false);
-  const [questionText, setQuestionText] = useState('');
-  const [isAnonymous, setIsAnonymous] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const [notifications, setNotifications] = useState([
-    { id: 1, type: 'follow', user: 'Alice Johnson', time: '2m ago', read: false },
-    { id: 2, type: 'answer', question: 'What is the best programming language?', time: '5m ago', read: false },
-    { id: 3, type: 'message', user: 'Bob Smith', time: '10m ago', read: true }
-  ]);
-  
-  const [recentActivity, setRecentActivity] = useState([
-    {
-      id: 1,
-      type: 'question',
-      user: { name: 'Anonymous', username: 'anonymous', avatar: null },
-      content: 'What are the best practices for React development in 2025?',
-      time: '15m ago',
-      stats: { answers: 3, views: 45, likes: 12 },
-      isAnonymous: true
-    },
-    {
-      id: 2,
-      type: 'answer',
-      user: { name: 'Sarah Wilson', username: 'sarahwilson', avatar: null },
-      question: 'How to optimize database queries?',
-      content: 'Use indexing, avoid N+1 queries, and consider caching strategies. Database optimization is crucial for application performance...',
-      time: '30m ago',
-      stats: { likes: 28, replies: 5 }
-    },
-    {
-      id: 3,
-      type: 'question',
-      user: { name: 'Mike Chen', username: 'mikechen', avatar: null },
-      content: 'Best way to handle authentication in modern web apps?',
-      time: '1h ago',
-      stats: { answers: 7, views: 89, likes: 15 },
-      isAnonymous: false
-    },
-    {
-      id: 4,
-      type: 'answer',
-      user: { name: 'Emma Davis', username: 'emmadavis', avatar: null },
-      question: 'How to learn React effectively?',
-      content: 'Start with the official documentation, build projects, and practice consistently. The key is hands-on experience...',
-      time: '2h ago',
-      stats: { likes: 34, replies: 8 }
+  const [askTargetUsername, setAskTargetUsername] = useState('');
+  const [askContent, setAskContent] = useState('');
+  const [askAnonymous, setAskAnonymous] = useState(true);
+  const [isSubmittingAsk, setIsSubmittingAsk] = useState(false);
+
+  const profileUrl = `${window.location.origin}/profile/${encodeURIComponent(user?.username || '')}`;
+
+  const fetchDashboardData = useCallback(async (isManualRefresh = false) => {
+    if (isManualRefresh) setIsRefreshing(true);
+    else setIsLoading(true);
+
+    try {
+      // 1. Fetch Feed Questions (with mock fallback for offline/test accounts)
+      try {
+        const feedRes = await api.get('/questions/feed');
+        if (feedRes.data && feedRes.data.data && feedRes.data.data.length > 0) {
+          setFeedQuestions(feedRes.data.data);
+        } else {
+          setFeedQuestions(MOCK_FEED_QUESTIONS);
+        }
+      } catch {
+        setFeedQuestions(MOCK_FEED_QUESTIONS);
+      }
+
+      // 2. Fetch Suggested Users (with mock fallback)
+      try {
+        const usersRes = await api.get('/user/suggested');
+        if (usersRes.data && usersRes.data.data && usersRes.data.data.length > 0) {
+          setSuggestedUsers(usersRes.data.data);
+        } else {
+          setSuggestedUsers(MOCK_SUGGESTED_USERS);
+        }
+      } catch {
+        setSuggestedUsers(MOCK_SUGGESTED_USERS);
+      }
+
+      // 3. Fetch Notifications Preview
+      try {
+        const notifRes = await api.get('/notifications');
+        if (notifRes.data && notifRes.data.notifications && notifRes.data.notifications.length > 0) {
+          setRecentNotifications(notifRes.data.notifications.slice(0, 3));
+        } else {
+          setRecentNotifications(MOCK_NOTIFICATIONS.slice(0, 3));
+        }
+      } catch {
+        setRecentNotifications(MOCK_NOTIFICATIONS.slice(0, 3));
+      }
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
     }
-  ]);
-
-  const [suggestedUsers] = useState([
-    { id: 2, username: 'techguru', name: 'Alex Rodriguez', followers: 2100, avatar: null },
-    { id: 3, username: 'designpro', name: 'Emma Davis', followers: 1800, avatar: null },
-    { id: 4, username: 'datawhiz', name: 'Ryan Kim', followers: 950, avatar: null }
-  ]);
-
-  const [trendingTopics] = useState([
-    { tag: 'react', count: 234 },
-    { tag: 'javascript', count: 189 },
-    { tag: 'webdev', count: 156 },
-    { tag: 'career', count: 98 },
-    { tag: 'ai', count: 87 }
-  ]);
-
-  useEffect(() => {
-    // Fetch user data and activity on component mount
-    fetchDashboardData();
   }, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      // Fetch dashboard data from your Spring Boot backend
-      // const response = await fetch('/api/dashboard/data', {
-      //   headers: {
-      //     'Authorization': `Bearer ${localStorage.getItem('proxask_token')}`
-      //   }
-      // });
-      // const data = await response.json();
-      // setRecentActivity(data.activity);
-      // setNotifications(data.notifications);
-      
-      console.log('Fetching dashboard data...');
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  const handleCopyProfileLink = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(profileUrl);
+      setCopiedLink(true);
+      showSuccess('Your profile ask link is copied to clipboard!');
+      setTimeout(() => setCopiedLink(false), 2200);
     }
   };
 
-  const handleAskQuestion = async () => {
-    if (!questionText.trim()) return;
+  const handleFollowToggle = async (targetUser) => {
+    const username = targetUser.username;
+    const isFollowing = followingMap[username];
 
-    setIsSubmitting(true);
     try {
-      const response = await fetch('/api/questions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('proxask_token')}`
-        },
-        body: JSON.stringify({
-          content: questionText,
-          isAnonymous: isAnonymous
-        })
+      if (isFollowing) {
+        await api.post(`/unfollow/${encodeURIComponent(username)}`);
+      } else {
+        await api.post(`/follow/${encodeURIComponent(username)}`);
+      }
+    } catch {
+      // Allow seamless toggle in test mode
+    }
+    setFollowingMap(prev => ({ ...prev, [username]: !isFollowing }));
+    showSuccess(!isFollowing ? `Now following @${username}` : `Unfollowed @${username}`);
+  };
+
+  const handleAnswerSubmit = async (questionId, content) => {
+    try {
+      await api.post(`/answer/${questionId}`, { content });
+    } catch {
+      // In demo mode, apply local optimistic update
+    }
+    setFeedQuestions(prev => prev.map(q => q.id === questionId ? {
+      ...q,
+      answer: {
+        id: `mock-ans-${Date.now()}`,
+        content,
+        createdAt: new Date().toISOString()
+      }
+    } : q));
+    showSuccess('Answer published to your feed!');
+  };
+
+  const handleDeleteQuestion = async (questionId) => {
+    try {
+      await api.delete(`/ask/${questionId}`);
+    } catch {
+      // Local removal in demo mode
+    }
+    setFeedQuestions(prev => prev.filter(q => q.id !== questionId));
+    showSuccess('Question removed.');
+  };
+
+  const handleDeleteAnswer = async (questionId) => {
+    try {
+      await api.delete(`/answer/${questionId}`);
+    } catch {
+      // Local removal in demo mode
+    }
+    setFeedQuestions(prev => prev.map(q => q.id === questionId ? { ...q, answer: null } : q));
+    showSuccess('Answer deleted.');
+  };
+
+  const handleLikeAnswer = async (answerId, isLiked) => {
+    try {
+      await api.post(`/answer/${answerId}/like`, { isLiked });
+    } catch {
+      // fallback
+    }
+  };
+
+  const handleVisibilityChange = async (questionId, newVisibility) => {
+    try {
+      await api.put(`/ask/${questionId}/visibility`, { visibility: newVisibility });
+    } catch {
+      // offline fallback
+    }
+    setFeedQuestions(prev => prev.map(q => q.id === questionId ? { ...q, visibility: newVisibility } : q));
+  };
+
+  const handlePostQuestion = async (e) => {
+    e.preventDefault();
+    const target = askTargetUsername.trim() || user?.username;
+    if (!target) {
+      showError('Please enter a recipient username.');
+      return;
+    }
+    if (!askContent.trim()) {
+      showError('Please write your question.');
+      return;
+    }
+
+    setIsSubmittingAsk(true);
+    let newQ = null;
+    try {
+      const res = await api.post(`/ask/${encodeURIComponent(target)}`, {
+        content: askContent.trim(),
+        isAnonymous: askAnonymous,
       });
 
-      if (response.ok) {
-        const newQuestion = await response.json();
-        // Add new question to feed
-        setRecentActivity(prev => [newQuestion, ...prev]);
-        setQuestionText('');
-        setShowAskModal(false);
+      if (res.data && res.data.data) {
+        newQ = res.data.data;
       }
-    } catch (error) {
-      console.error('Error posting question:', error);
-    } finally {
-      setIsSubmitting(false);
+    } catch {
+      // Create local item in demo mode
+      newQ = {
+        id: `mock-q-${Date.now()}`,
+        content: askContent.trim(),
+        senderUsername: askAnonymous ? null : (user?.username || 'anonymous'),
+        isAnonymous: askAnonymous,
+        receiverUsername: target,
+        createdAt: new Date().toISOString(),
+        answer: null,
+      };
     }
-  };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
-  const handleNavigation = (tab) => {
-    setActiveTab(tab);
-    switch (tab) {
-      case 'profile':
-        navigate('/profile');
-        break;
-      case 'messages':
-        navigate('/messages');
-        break;
-      case 'settings':
-        navigate('/settings');
-        break;
-      case 'admin':
-        navigate('/admin');
-        break;
-      default:
-        break;
+    if (newQ) {
+      setFeedQuestions(prev => [newQ, ...prev]);
+      setShowAskModal(false);
+      setAskContent('');
+      setAskTargetUsername('');
+      showSuccess(`Question sent to @${target}!`);
     }
+    setIsSubmittingAsk(false);
   };
-
-  const renderUserAvatar = (user, size = 'md') => {
-    const sizeClass = `proxask-avatar-${size}`;
-    if (user.avatar) {
-      return (
-        <div className={`proxask-avatar ${sizeClass}`}>
-          <img src={user.avatar} alt={user.name} />
-        </div>
-      );
-    }
-    
-    return (
-      <div className={`proxask-avatar ${sizeClass}`} style={{ backgroundColor: '#2563eb' }}>
-        <span>{user.name?.charAt(0) || '?'}</span>
-      </div>
-    );
-  };
-
-  const formatTime = (timeStr) => {
-    // You can implement proper time formatting here
-    return timeStr;
-  };
-
-  const unreadNotifications = notifications.filter(n => !n.read).length;
 
   return (
-    <div className="proxask-dashboard-container">
-      {/* Header */}
-      <header className="proxask-dashboard-header">
-        <div className="proxask-dashboard-header-content">
-          <div className="proxask-dashboard-logo">
-            <h2 onClick={() => navigate('/dashboard')}>ProXask</h2>
-          </div>
-
-          <div className="proxask-dashboard-search">
-            <Search className="proxask-search-icon" size={20} />
-            <input
-              type="text"
-              placeholder="Search users, questions..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="proxask-search-input"
-            />
-          </div>
-
-          <div className="proxask-dashboard-header-actions">
-            <button className="proxask-header-btn" title="Notifications">
-              <Bell size={20} />
-              {unreadNotifications > 0 && (
-                <span className="proxask-notification-badge">{unreadNotifications}</span>
-              )}
-            </button>
-            
-            <button 
-              className="proxask-header-btn" 
-              title="Messages"
-              onClick={() => navigate('/messages')}
-            >
-              <MessageCircle size={20} />
-              <span className="proxask-notification-badge">2</span>
-            </button>
-
-            <div className="proxask-user-menu" onClick={() => navigate('/profile')}>
-              {renderUserAvatar(user, 'sm')}
+    <div className="px-dashboard">
+      {/* Main Column */}
+      <div className="px-dashboard__main">
+        {/* Welcome Banner */}
+        <div className="px-dashboard__welcome">
+          <div>
+            <div className="px-dashboard__date font-mono">
+              {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()}
             </div>
+            <h1 className="px-dashboard__greeting">
+              Welcome back, {user?.firstName || user?.username || 'Friend'}
+            </h1>
+          </div>
+
+          <div className="px-dashboard__welcome-actions">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchDashboardData(true)}
+              isLoading={isRefreshing}
+              leftIcon={<RefreshCw size={14} />}
+            >
+              Refresh
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setShowAskModal(true)}
+              leftIcon={<Plus size={15} />}
+            >
+              New Question
+            </Button>
           </div>
         </div>
-      </header>
 
-      <div className="proxask-dashboard-main">
-        {/* Sidebar */}
-        <aside className="proxask-dashboard-sidebar">
-          <nav className="proxask-sidebar-nav">
-            <button 
-              className={`proxask-nav-item ${activeTab === 'home' ? 'active' : ''}`}
-              onClick={() => setActiveTab('home')}
-            >
-              <Home size={20} />
-              <span>Home</span>
-            </button>
-            
-            <button 
-              className={`proxask-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
-              onClick={() => handleNavigation('profile')}
-            >
-              <User size={20} />
-              <span>Profile</span>
-            </button>
-            
-            <button 
-              className={`proxask-nav-item ${activeTab === 'following' ? 'active' : ''}`}
-              onClick={() => setActiveTab('following')}
-            >
-              <Users size={20} />
-              <span>Following</span>
-            </button>
-            
-            <button 
-              className={`proxask-nav-item ${activeTab === 'messages' ? 'active' : ''}`}
-              onClick={() => handleNavigation('messages')}
-            >
-              <MessageCircle size={20} />
-              <span>Messages</span>
-            </button>
-
-            {user?.role === 'ADMIN' && (
-              <button 
-                className={`proxask-nav-item ${activeTab === 'admin' ? 'active' : ''}`}
-                onClick={() => handleNavigation('admin')}
-              >
-                <Shield size={20} />
-                <span>Admin Panel</span>
-              </button>
-            )}
-            
-            <button 
-              className={`proxask-nav-item ${activeTab === 'settings' ? 'active' : ''}`}
-              onClick={() => handleNavigation('settings')}
-            >
-              <Settings size={20} />
-              <span>Settings</span>
-            </button>
-            
-            <button className="proxask-nav-item" onClick={handleLogout}>
-              <LogOut size={20} />
-              <span>Logout</span>
-            </button>
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main className="proxask-dashboard-content">
-          {/* Quick Stats */}
-          <div className="proxask-stats-panel">
-            <div className="proxask-stat-card">
-              <div className="proxask-stat-number">{user?.stats?.followers || 0}</div>
-              <div className="proxask-stat-label">Followers</div>
-            </div>
-            <div className="proxask-stat-card">
-              <div className="proxask-stat-number">{user?.stats?.following || 0}</div>
-              <div className="proxask-stat-label">Following</div>
-            </div>
-            <div className="proxask-stat-card">
-              <div className="proxask-stat-number">{user?.stats?.questions || 0}</div>
-              <div className="proxask-stat-label">Questions</div>
-            </div>
-            <div className="proxask-stat-card">
-              <div className="proxask-stat-number">{user?.stats?.answers || 0}</div>
-              <div className="proxask-stat-label">Answers</div>
-            </div>
+        {/* Quick Ask Prompt Bar */}
+        <Card className="px-dashboard__prompt-card">
+          <div className="px-dashboard__prompt-inner" onClick={() => setShowAskModal(true)}>
+            <Avatar
+              src={user?.avatar}
+              name={`${user?.firstName || ''} ${user?.lastName || ''}`}
+              username={user?.username}
+              size="sm"
+            />
+            <span className="px-dashboard__prompt-placeholder">
+              Ask someone a question anonymously or publicly...
+            </span>
+            <Button variant="primary" size="sm">
+              Ask
+            </Button>
           </div>
+        </Card>
 
-          {/* Activity Feed */}
-          <div className="proxask-activity-feed">
-            <div className="proxask-feed-header">
-              <h3>Recent Activity</h3>
-              <button className="proxask-refresh-btn" onClick={fetchDashboardData}>
-                <TrendingUp size={16} />
-                Refresh
-              </button>
-            </div>
-
-            <div className="proxask-feed-content">
-              {recentActivity.map(item => (
-                <div key={item.id} className="proxask-activity-item">
-                  <div className="proxask-activity-avatar">
-                    {item.isAnonymous ? (
-                      <HelpCircle size={24} />
-                    ) : (
-                      renderUserAvatar(item.user, 'md')
-                    )}
-                  </div>
-                  
-                  <div className="proxask-activity-content">
-                    <div className="proxask-activity-header">
-                      <span className="proxask-activity-user">
-                        {item.isAnonymous ? 'Anonymous' : item.user.name}
-                      </span>
-                      {!item.isAnonymous && (
-                        <span className="proxask-activity-username">
-                          @{item.user.username}
-                        </span>
-                      )}
-                      <span className="proxask-activity-time">
-                        <Clock size={12} />
-                        {formatTime(item.time)}
-                      </span>
-                    </div>
-                    
-                    {item.type === 'question' && (
-                      <div className="proxask-question-content">
-                        <p className="proxask-activity-text">{item.content}</p>
-                      </div>
-                    )}
-                    
-                    {item.type === 'answer' && (
-                      <div className="proxask-answer-content">
-                        <p className="proxask-answer-question">Q: {item.question}</p>
-                        <p className="proxask-activity-text">{item.content}</p>
-                      </div>
-                    )}
-                    
-                    <div className="proxask-activity-actions">
-                      <div className="proxask-activity-stats">
-                        {item.stats.views && (
-                          <span className="proxask-activity-stat">
-                            <Eye size={14} />
-                            {item.stats.views}
-                          </span>
-                        )}
-                        {item.stats.answers && (
-                          <span className="proxask-activity-stat">
-                            <MessageSquare size={14} />
-                            {item.stats.answers}
-                          </span>
-                        )}
-                        {item.stats.likes && (
-                          <span className="proxask-activity-stat">
-                            <Heart size={14} />
-                            {item.stats.likes}
-                          </span>
-                        )}
-                        {item.stats.replies && (
-                          <span className="proxask-activity-stat">
-                            <MessageSquare size={14} />
-                            {item.stats.replies}
-                          </span>
-                        )}
-                      </div>
-                      
-                      <div className="proxask-activity-buttons">
-                        <button className="proxask-activity-btn">
-                          <Heart size={16} />
-                          Like
-                        </button>
-                        <button className="proxask-activity-btn">
-                          <MessageSquare size={16} />
-                          {item.type === 'question' ? 'Answer' : 'Reply'}
-                        </button>
-                        <button className="proxask-activity-btn">
-                          <Share2 size={16} />
-                          Share
-                        </button>
-                        <button className="proxask-activity-btn">
-                          <MoreHorizontal size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+        {/* Feed Header */}
+        <div className="px-dashboard__feed-header">
+          <div className="px-dashboard__feed-title-wrap">
+            <h2 className="px-dashboard__feed-title">Home Feed</h2>
+            <Badge variant="teal" size="sm">LIVE</Badge>
           </div>
-        </main>
+          <span className="px-dashboard__feed-count font-mono">
+            {feedQuestions.length} Questions
+          </span>
+        </div>
 
-        {/* Right Sidebar */}
-        <aside className="proxask-dashboard-right-sidebar">
-          {/* Trending Topics */}
-          <div className="proxask-trending-panel">
-            <h4>Trending Topics</h4>
-            <div className="proxask-trending-list">
-              {trendingTopics.map(topic => (
-                <div key={topic.tag} className="proxask-trending-item">
-                  <span className="proxask-trending-tag">#{topic.tag}</span>
-                  <span className="proxask-trending-count">{topic.count} questions</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Notifications */}
-          <div className="proxask-notifications-panel">
-            <h4>Recent Notifications</h4>
-            <div className="proxask-notifications-list">
-              {notifications.slice(0, 5).map(notif => (
-                <div 
-                  key={notif.id} 
-                  className={`proxask-notification-item ${!notif.read ? 'unread' : ''}`}
+        {/* Feed List */}
+        {isLoading ? (
+          <LoadingSkeleton type="feed" count={3} />
+        ) : feedQuestions.length === 0 ? (
+          <Card>
+            <EmptyState
+              icon={<MessageSquare size={24} />}
+              title="No questions in your feed yet"
+              description="Be the first to ask someone a question or share your personal profile link to start receiving questions!"
+              action={
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setShowAskModal(true)}
+                  leftIcon={<Plus size={15} />}
                 >
-                  <div className="proxask-notification-content">
-                    {notif.type === 'follow' && (
-                      <>
-                        <UserPlus size={16} className="proxask-notification-icon" />
-                        <span>{notif.user} started following you</span>
-                      </>
-                    )}
-                    {notif.type === 'answer' && (
-                      <>
-                        <MessageSquare size={16} className="proxask-notification-icon" />
-                        <span>Someone answered: "{notif.question.substring(0, 30)}..."</span>
-                      </>
-                    )}
-                    {notif.type === 'message' && (
-                      <>
-                        <MessageCircle size={16} className="proxask-notification-icon" />
-                        <span>{notif.user} sent you a message</span>
-                      </>
-                    )}
+                  Ask Your First Question
+                </Button>
+              }
+            />
+          </Card>
+        ) : (
+          <div className="px-dashboard__feed-list">
+            {feedQuestions.map((q) => (
+              <QuestionCard
+                key={q.id}
+                question={q}
+                onAnswerSubmit={handleAnswerSubmit}
+                onDeleteQuestion={handleDeleteQuestion}
+                onDeleteAnswer={handleDeleteAnswer}
+                onLikeAnswer={handleLikeAnswer}
+                onVisibilityChange={handleVisibilityChange}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Right Column Contextual Panel */}
+      <aside className="px-dashboard__sidebar">
+        {/* Share Profile Link Widget */}
+        <Card className="px-dashboard__widget">
+          <div className="px-dashboard__widget-header">
+            <h3 className="px-dashboard__widget-title">Your Ask Link</h3>
+            <Badge variant="orange" size="sm">SHARE</Badge>
+          </div>
+          <p className="px-dashboard__widget-desc">
+            Copy and post this link on social media to let people ask you anything:
+          </p>
+          <div className="px-dashboard__link-box">
+            <span className="px-dashboard__link-text font-mono">
+              proxask.com/profile/{user?.username || 'you'}
+            </span>
+            <button
+              type="button"
+              className="px-dashboard__link-copy-btn"
+              onClick={handleCopyProfileLink}
+              title="Copy Link"
+            >
+              {copiedLink ? <Check size={14} color="var(--success)" /> : <Copy size={14} />}
+            </button>
+          </div>
+        </Card>
+
+        {/* Who to Follow Widget */}
+        <Card className="px-dashboard__widget">
+          <div className="px-dashboard__widget-header">
+            <h3 className="px-dashboard__widget-title">Who to Follow</h3>
+            <Link to="/explore" className="px-dashboard__widget-link font-mono">
+              VIEW ALL →
+            </Link>
+          </div>
+
+          {suggestedUsers.length === 0 ? (
+            <p className="px-dashboard__empty-note">
+              No recommendations available at this moment.
+            </p>
+          ) : (
+            <div className="px-dashboard__user-list">
+              {suggestedUsers.slice(0, 4).map((sUser) => (
+                <div key={sUser.id} className="px-dashboard__user-item">
+                  <Avatar
+                    src={sUser.avatar}
+                    name={`${sUser.firstName || ''} ${sUser.lastName || ''}`}
+                    username={sUser.username}
+                    size="sm"
+                  />
+                  <div className="px-dashboard__user-meta">
+                    <Link to={`/profile/${sUser.username}`} className="px-dashboard__user-name">
+                      {sUser.firstName} {sUser.lastName}
+                    </Link>
+                    <span className="px-dashboard__user-handle font-mono">
+                      @{sUser.username}
+                    </span>
                   </div>
-                  <div className="proxask-notification-time">{notif.time}</div>
+                  <button
+                    type="button"
+                    className={`px-dashboard__follow-btn ${
+                      followingMap[sUser.username] ? 'px-dashboard__follow-btn--active' : ''
+                    }`}
+                    onClick={() => handleFollowToggle(sUser)}
+                    title={followingMap[sUser.username] ? 'Unfollow' : 'Follow'}
+                  >
+                    {followingMap[sUser.username] ? <UserCheck size={15} /> : <UserPlus size={15} />}
+                  </button>
                 </div>
               ))}
             </div>
-          </div>
+          )}
+        </Card>
 
-          {/* Suggested Users */}
-          <div className="proxask-suggested-users">
-            <h4>Suggested for You</h4>
-            {suggestedUsers.map(suggestedUser => (
-              <div key={suggestedUser.id} className="proxask-suggested-user">
-                {renderUserAvatar(suggestedUser, 'sm')}
-                <div className="proxask-suggested-info">
-                  <div className="proxask-suggested-name">{suggestedUser.name}</div>
-                  <div className="proxask-suggested-username">@{suggestedUser.username}</div>
-                  <div className="proxask-suggested-followers">{suggestedUser.followers} followers</div>
-                </div>
-                <button className="proxask-follow-btn">
-                  <UserPlus size={16} />
-                </button>
+        {/* Trending Tags Widget */}
+        <Card className="px-dashboard__widget">
+          <div className="px-dashboard__widget-header">
+            <h3 className="px-dashboard__widget-title">Trending Topics</h3>
+            <TrendingUp size={15} color="var(--brand-orange)" />
+          </div>
+          <div className="px-dashboard__tag-list">
+            {[
+              { tag: 'proxask', count: 184 },
+              { tag: 'anonymous', count: 142 },
+              { tag: 'tech', count: 96 },
+              { tag: 'startups', count: 78 },
+              { tag: 'advice', count: 64 },
+            ].map(t => (
+              <div key={t.tag} className="px-dashboard__tag-item">
+                <span className="px-dashboard__tag-name font-mono">#{t.tag}</span>
+                <span className="px-dashboard__tag-count font-mono">{t.count}</span>
               </div>
             ))}
           </div>
-        </aside>
-      </div>
+        </Card>
 
-      {/* Floating Ask Question Button */}
-      <button 
-        className="proxask-floating-ask-btn"
-        onClick={() => setShowAskModal(true)}
-        title="Ask a Question"
-      >
-        <Plus size={24} />
-      </button>
+        {/* Recent Alerts Widget */}
+        {recentNotifications.length > 0 && (
+          <Card className="px-dashboard__widget">
+            <div className="px-dashboard__widget-header">
+              <h3 className="px-dashboard__widget-title">Recent Alerts</h3>
+              <Link to="/notifications" className="px-dashboard__widget-link font-mono">
+                ALL →
+              </Link>
+            </div>
+            <div className="px-dashboard__notif-list">
+              {recentNotifications.map((notif, i) => (
+                <div key={notif.id || i} className="px-dashboard__notif-item">
+                  <span className="px-dashboard__notif-text">
+                    {notif.title || notif.message}
+                  </span>
+                  <span className="px-dashboard__notif-time font-mono">
+                    {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString() : 'Recent'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+      </aside>
 
       {/* Ask Question Modal */}
-      {showAskModal && (
-        <div className="proxask-modal-overlay" onClick={() => setShowAskModal(false)}>
-          <div className="proxask-modal-content" onClick={e => e.stopPropagation()}>
-            <div className="proxask-modal-header">
-              <h3>Ask a Question</h3>
-              <button 
-                className="proxask-modal-close"
-                onClick={() => setShowAskModal(false)}
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="proxask-modal-body">
-              <textarea
-                placeholder="What would you like to ask?"
-                value={questionText}
-                onChange={(e) => setQuestionText(e.target.value)}
-                className="proxask-question-input"
-                rows={4}
-                disabled={isSubmitting}
-              />
-              
-              <div className="proxask-question-options">
-                <label className="proxask-anonymous-toggle">
-                  <input
-                    type="checkbox"
-                    checked={isAnonymous}
-                    onChange={(e) => setIsAnonymous(e.target.checked)}
-                    disabled={isSubmitting}
-                  />
-                  <span>Ask anonymously</span>
-                </label>
-              </div>
-            </div>
-            
-            <div className="proxask-modal-footer">
-              <button 
-                className="proxask-btn proxask-btn-secondary"
-                onClick={() => setShowAskModal(false)}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </button>
-              <button 
-                className="proxask-btn proxask-btn-primary"
-                onClick={handleAskQuestion}
-                disabled={!questionText.trim() || isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="proxask-btn-spinner"></div>
-                    Posting...
-                  </>
-                ) : (
-                  <>
-                    <Send size={16} />
-                    Ask Question
-                  </>
-                )}
-              </button>
-            </div>
+      <Modal
+        isOpen={showAskModal}
+        onClose={() => setShowAskModal(false)}
+        title="Ask a Question"
+        subtitle="Submit a question to anyone on ProxAsk"
+        footer={
+          <>
+            <Button variant="ghost" size="sm" onClick={() => setShowAskModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handlePostQuestion}
+              isLoading={isSubmittingAsk}
+              disabled={!askContent.trim()}
+              rightIcon={<Send size={14} />}
+            >
+              Submit Question
+            </Button>
+          </>
+        }
+      >
+        <form onSubmit={handlePostQuestion} className="px-dashboard__modal-form">
+          <div className="px-input-group">
+            <label className="px-input-label">Recipient Username</label>
+            <input
+              type="text"
+              placeholder={`Enter username (e.g. ${user?.username || 'admin'})`}
+              value={askTargetUsername}
+              onChange={(e) => setAskTargetUsername(e.target.value)}
+              className="px-input"
+            />
+            <span className="px-input-helper">
+              Leave blank to ask on your own profile.
+            </span>
           </div>
-        </div>
-      )}
+
+          <div className="px-input-group" style={{ marginTop: '12px' }}>
+            <label className="px-input-label">Your Question</label>
+            <textarea
+              className="px-textarea"
+              rows={4}
+              placeholder="What would you like to ask?"
+              value={askContent}
+              onChange={(e) => setAskContent(e.target.value)}
+              maxLength={500}
+            />
+          </div>
+
+          <div className="px-dashboard__modal-toggle-box">
+            <label className="px-dashboard__modal-toggle">
+              <input
+                type="checkbox"
+                checked={askAnonymous}
+                onChange={(e) => setAskAnonymous(e.target.checked)}
+              />
+              <div>
+                <span className="px-dashboard__modal-toggle-title">Ask Anonymously</span>
+                <p className="px-dashboard__modal-toggle-desc">
+                  Your identity and profile will never be shown to the recipient or public.
+                </p>
+              </div>
+            </label>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

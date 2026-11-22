@@ -22,6 +22,7 @@ public class EmailVerification {
     private String id;
     private int otp;
     private String verificationToken;
+    @Builder.Default
     private int failedAttempts = 0;
     private LocalDateTime expiryDate;
 

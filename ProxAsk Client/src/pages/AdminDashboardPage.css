@@ -1,0 +1,363 @@
+/* Admin Dashboard Styles — GitHub Light Design System */
+.px-admin {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.px-admin__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.px-admin__badge-wrap {
+  margin-bottom: var(--space-xs);
+}
+
+.px-admin__title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px 0;
+}
+
+.px-admin__subtitle {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Metrics */
+.px-admin__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.px-admin__metric-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-md);
+}
+
+.px-admin__metric-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.px-admin__metric-icon--teal {
+  background-color: var(--brand-primary-light);
+  color: var(--brand-primary);
+}
+
+.px-admin__metric-icon--orange {
+  background-color: rgba(255, 122, 0, 0.1);
+  color: #D95D00;
+}
+
+.px-admin__metric-icon--green {
+  background-color: var(--success-light);
+  color: var(--success);
+}
+
+.px-admin__metric-value {
+  font-size: 18px;
+  font-weight: 700;
+  display: block;
+  line-height: 1.2;
+}
+
+.px-admin__metric-label {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.px-admin__health-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.px-admin__live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--success);
+  box-shadow: 0 0 6px rgba(8, 135, 43, 0.6);
+}
+
+/* Overview Grid */
+.px-admin__overview-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-lg);
+}
+
+/* Table Card */
+.px-admin__table-card {
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-md);
+}
+
+.px-admin__table-header {
+  padding: var(--space-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.px-admin__table-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.px-admin__table-count {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  display: block;
+}
+
+.px-admin__search-box {
+  position: relative;
+  width: 260px;
+}
+
+.px-admin__search-icon {
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.px-admin__search-input {
+  height: 32px;
+  padding-left: 28px;
+  font-size: 12.5px;
+  background-color: var(--bg-muted);
+  border-radius: var(--radius-sm);
+  width: 100%;
+}
+
+/* Table */
+.px-admin__table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.px-admin__table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.px-admin__table th {
+  padding: 8px var(--space-md);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: var(--bg-muted);
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.px-admin__table td {
+  padding: 10px var(--space-md);
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.px-admin__table tbody tr:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+.px-admin__user-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.px-admin__user-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.px-admin__user-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.px-admin__user-handle {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.px-admin__email-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.px-admin__status-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  letter-spacing: 0.04em;
+}
+
+.px-admin__status-pill--active {
+  background-color: var(--success-light);
+  color: var(--success);
+}
+
+.px-admin__status-pill--inactive {
+  background-color: var(--danger-light);
+  color: var(--danger);
+}
+
+.px-admin__role {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.px-admin__actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.px-admin__del-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.px-admin__del-btn:hover {
+  background-color: var(--danger-light);
+  color: var(--danger);
+  border-color: rgba(209, 36, 47, 0.2);
+}
+
+.px-admin__q-snippet {
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12.5px;
+  color: var(--text-primary);
+}
+
+.px-admin__moderation-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.px-admin__q-text {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.px-admin__ans-snippet {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  background: var(--bg-muted);
+  padding: 4px 8px;
+  border-radius: var(--radius-xs);
+  border-left: 2px solid var(--brand-primary);
+}
+
+/* System Grid */
+.px-admin__system-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-md);
+}
+
+.px-admin__system-card {
+  padding: var(--space-lg);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-md);
+}
+
+.px-admin__system-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.px-admin__system-icon {
+  color: var(--brand-primary);
+}
+
+.px-admin__system-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.px-admin__system-specs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.px-admin__spec-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.px-admin__spec-label {
+  color: var(--text-secondary);
+}
+
+.px-admin__spec-val {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.px-admin__spec-val--green {
+  color: var(--success);
+}

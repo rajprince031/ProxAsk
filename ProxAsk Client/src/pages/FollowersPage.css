@@ -1,0 +1,170 @@
+/* Connections Page Styles — GitHub Light Design System */
+.px-connections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.px-connections__badge-wrap {
+  margin-bottom: var(--space-xs);
+}
+
+.px-connections__title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px 0;
+}
+
+.px-connections__subtitle {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.px-connections__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.px-connections__tabs {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.px-connections__tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background-color: transparent;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.px-connections__tab:hover {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.px-connections__tab--active {
+  background-color: var(--brand-primary-light);
+  color: var(--brand-primary);
+  font-weight: 600;
+}
+
+.px-connections__tab-count {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.px-connections__tab--active .px-connections__tab-count {
+  background-color: var(--brand-primary);
+  color: #FFFFFF;
+}
+
+.px-connections__filter-box {
+  position: relative;
+  width: 220px;
+}
+
+.px-connections__filter-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.px-connections__filter-input {
+  height: 32px;
+  padding-left: 28px;
+  font-size: 12.5px;
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-sm);
+}
+
+/* List */
+.px-connections__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.px-connections__card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md);
+  gap: var(--space-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-md);
+}
+
+.px-connections__user-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  min-width: 0;
+  flex: 1;
+}
+
+.px-connections__user-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.px-connections__user-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.px-connections__user-name:hover {
+  color: var(--brand-primary);
+  text-decoration: underline;
+}
+
+.px-connections__user-handle {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.px-connections__user-bio {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.35;
+  margin-top: 2px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.px-connections__card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+}

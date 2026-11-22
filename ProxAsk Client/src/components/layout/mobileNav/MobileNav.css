@@ -1,0 +1,94 @@
+/* Mobile Bottom Navigation */
+.px-mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background-color: var(--bg-surface);
+  border-top: 1px solid var(--border-color);
+  z-index: 95;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 var(--space-xs);
+  backdrop-filter: blur(8px);
+}
+
+.px-mobile-nav__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 10px;
+  font-weight: 500;
+  flex: 1;
+  height: 100%;
+  transition: color var(--transition-fast);
+}
+
+.px-mobile-nav__item--active {
+  color: var(--brand-primary);
+}
+
+.px-mobile-nav__icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.px-mobile-nav__badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  background-color: var(--brand-primary);
+  color: #FFFFFF;
+  font-size: 9px;
+  font-weight: 700;
+  height: 14px;
+  min-width: 14px;
+  padding: 0 3px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Central prominent + Action Button — Aligned with GitHub Light & Dark tokens */
+.px-mobile-nav__action-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background-color: var(--brand-primary);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 10px rgba(13, 103, 49, 0.4);
+  border: 2px solid var(--bg-surface);
+  transform: translateY(-6px);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.px-mobile-nav__action-btn:hover,
+.px-mobile-nav__action-btn:active {
+  background-color: var(--brand-primary-hover);
+  transform: translateY(-8px) scale(1.04);
+}
+
+.px-mobile-nav__action-icon {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+  stroke-width: 2.5;
+}
+
+@media (max-width: 768px) {
+  .px-mobile-nav {
+    display: flex;
+  }
+}

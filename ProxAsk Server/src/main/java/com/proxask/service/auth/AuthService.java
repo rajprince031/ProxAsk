@@ -5,7 +5,7 @@ import com.proxask.dto.auth.AuthResponse;
 import com.proxask.dto.auth.LoginRequest;
 import com.proxask.dto.auth.RegisterRequest;
 import com.proxask.entity.User;
-import com.proxask.repository.EmailVerificationRepository;
+import com.proxask.exception.VerificationException;
 import com.proxask.repository.UserRepository;
 import com.proxask.service.jwt.JWTService;
 import lombok.RequiredArgsConstructor;
@@ -30,40 +30,77 @@ public class AuthService {
     private final JWTService jwtService;
     private final ModelMapper modelMapper;
     private final OtpService otpService;
-    private final EmailVerificationRepository emailVerificationRepository;
     private final VerificationSupportService verificationSupportService;
 
     @Transactional
-    public UserDTO registerUser(RegisterRequest registerRequest){
+    public UserDTO registerUser(RegisterRequest registerRequest) {
+        String email = registerRequest.getEmail() != null ? registerRequest.getEmail().trim().toLowerCase() : null;
+        String username = registerRequest.getUsername() != null ? registerRequest.getUsername().trim().toLowerCase() : null;
 
-        verificationSupportService.cleanupUnverifiedConflicts(
-                registerRequest.getEmail(),
-                registerRequest.getUsername()
-        );
+        verificationSupportService.cleanupUnverifiedConflicts(email, username);
 
-        registerRequest.setPassword(bCryptPasswordEncoder.encode(registerRequest.getPassword()));
-        User user = modelMapper.map(registerRequest, User.class);
+        User user = new User();
+        user.setFirstName(registerRequest.getFirstName());
+        user.setLastName(registerRequest.getLastName());
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(bCryptPasswordEncoder.encode(registerRequest.getPassword()));
+        user.setBio(registerRequest.getBio());
+        user.setAvatar(registerRequest.getAvatar());
+        user.setIsActive(true);
+        user.setIsVerified(false);
+
         User newUser = userRepository.save(user);
         UserDTO userDTO = modelMapper.map(newUser, UserDTO.class);
-        otpService.sendOtp(newUser);
+
+        try {
+            otpService.sendOtp(newUser);
+        } catch (Exception e) {
+            log.warn("OTP dispatch failed during registration for {}: {}", email, e.getMessage());
+        }
+
         return userDTO;
     }
 
-    public ResponseEntity<AuthResponse> loginUser(LoginRequest loginRequest){
-        Authentication authentication = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsername(),
-                        loginRequest.getPassword())
-                );
-        if(!authentication.isAuthenticated())
-            return ResponseEntity.status(401).body(new AuthResponse());
+    public ResponseEntity<AuthResponse> loginUser(LoginRequest loginRequest) {
+        String identifier = loginRequest.getUsername();
+        if (identifier == null || identifier.trim().isEmpty()) {
+            identifier = loginRequest.getEmail();
+        }
 
-        String username = loginRequest.getUsername();
-        AuthResponse authResponse = new AuthResponse(
-                jwtService.generateToken(username),username
+        if (identifier == null || identifier.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username or email is required for login.");
+        }
+
+        final String searchIdentifier = identifier.trim();
+
+        // Resolve user to ensure email verification before completing login
+        User user = userRepository.findByUsername(searchIdentifier)
+                .or(() -> userRepository.findByEmail(searchIdentifier))
+                .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));
+
+        if (!Boolean.TRUE.equals(user.getIsVerified())) {
+            throw new VerificationException("Account is not verified. Please verify your email OTP before logging in.");
+        }
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(user.getUsername(), loginRequest.getPassword())
         );
+
+        if (!authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body(new AuthResponse());
+        }
+
+        String token = jwtService.generateToken(user.getUsername());
+        UserDTO userDTO = modelMapper.map(user, UserDTO.class);
+
+        AuthResponse authResponse = AuthResponse.builder()
+                .authToken(token)
+                .token(token)
+                .username(user.getUsername())
+                .user(userDTO)
+                .build();
+
         return ResponseEntity.ok(authResponse);
     }
-
-
 }
