@@ -10,7 +10,7 @@ import com.proxask.service.auth.AccountSecurityService;
 import com.proxask.service.auth.AuthService;
 import com.proxask.service.user.UserService;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
+import com.proxask.mapper.UserMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +22,7 @@ import java.util.Map;
 public class AuthController {
     private final AuthService authService;
     private final UserService userService;
-    private final ModelMapper modelMapper;
+    private final UserMapper userMapper;
     private final AccountSecurityService accountSecurityService;
 
     @PostMapping({"/register", "/auth/register", "/api/auth/register"})
@@ -44,7 +44,7 @@ public class AuthController {
             return ResponseEntity.status(401).body(Map.of("success", false, "message", "Unauthenticated"));
         }
         User user = userService.getUserByUsername(authentication.getName());
-        UserDTO userDTO = modelMapper.map(user, UserDTO.class);
+        UserDTO userDTO = userMapper.toDTO(user);
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "Token is valid",

@@ -10,7 +10,7 @@ import com.proxask.repository.UserRepository;
 import com.proxask.service.jwt.JWTService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
+import com.proxask.mapper.UserMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,7 +28,7 @@ public class AuthService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JWTService jwtService;
-    private final ModelMapper modelMapper;
+    private final UserMapper userMapper;
     private final OtpService otpService;
     private final VerificationSupportService verificationSupportService;
 
@@ -51,7 +51,7 @@ public class AuthService {
         user.setIsVerified(false);
 
         User newUser = userRepository.save(user);
-        UserDTO userDTO = modelMapper.map(newUser, UserDTO.class);
+        UserDTO userDTO = userMapper.toDTO(newUser);
 
         try {
             otpService.sendOtp(newUser);
@@ -92,7 +92,7 @@ public class AuthService {
         }
 
         String token = jwtService.generateToken(user.getUsername());
-        UserDTO userDTO = modelMapper.map(user, UserDTO.class);
+        UserDTO userDTO = userMapper.toDTO(user);
 
         AuthResponse authResponse = AuthResponse.builder()
                 .authToken(token)

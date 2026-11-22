@@ -94,13 +94,6 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!--Model Mapper-->
-		<dependency>
-			<groupId>org.modelmapper</groupId>
-			<artifactId>modelmapper</artifactId>
-			<version>3.2.4</version>
-		</dependency>
-
 		<!--Mail-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

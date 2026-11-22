@@ -9,7 +9,7 @@ import com.proxask.repository.QuestionRepository;
 import com.proxask.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
+import com.proxask.mapper.UserMapper;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,7 +28,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
     private final QuestionRepository questionRepository;
-    private final ModelMapper modelMapper;
+    private final UserMapper userMapper;
 
     @Transactional(readOnly = true)
     public UserDTO getUserDetails(String identifier) {
@@ -161,7 +161,10 @@ public class UserService {
     }
 
     public UserDTO toUserDTO(User user) {
-        UserDTO dto = modelMapper.map(user, UserDTO.class);
+        UserDTO dto = userMapper.toDTO(user);
+        if (dto == null) {
+            return null;
+        }
         long followersCount = followRepository.countByFollowingAndStatus(user, com.proxask.enums.FollowStatus.ACCEPTED);
         long followingCount = followRepository.countByFollowerAndStatus(user, com.proxask.enums.FollowStatus.ACCEPTED);
         long questionsCount = questionRepository.findByReceiver(user).size();

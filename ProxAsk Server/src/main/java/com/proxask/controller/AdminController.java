@@ -11,7 +11,7 @@ import com.proxask.repository.QuestionRepository;
 import com.proxask.repository.UserRepository;
 import com.proxask.service.question.QuestionService;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
+import com.proxask.mapper.UserMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -29,12 +29,12 @@ public class AdminController {
     private final AnswerRepository answerRepository;
     private final AnswerLikeRepository answerLikeRepository;
     private final QuestionService questionService;
-    private final ModelMapper modelMapper;
+    private final UserMapper userMapper;
 
     @GetMapping("/all-user")
     public ResponseEntity<List<UserDTO>> getAllUser() {
         List<UserDTO> users = userRepository.findAll().stream()
-                .map(user -> modelMapper.map(user, UserDTO.class))
+                .map(userMapper::toDTO)
                 .toList();
         return ResponseEntity.ok(users);
     }
@@ -66,7 +66,7 @@ public class AdminController {
         boolean current = user.getIsActive() != null ? user.getIsActive() : true;
         user.setIsActive(!current);
         User saved = userRepository.save(user);
-        return ResponseEntity.ok(new ApiResponse<>(true, "User status updated", modelMapper.map(saved, UserDTO.class)));
+        return ResponseEntity.ok(new ApiResponse<>(true, "User status updated", userMapper.toDTO(saved)));
     }
 
     @DeleteMapping("/user/{userId}")
