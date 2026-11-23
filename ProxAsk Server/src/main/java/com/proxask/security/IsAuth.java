@@ -1,7 +1,7 @@
 package com.proxask.security;
 
 import com.proxask.exception.ResourceNotFoundException;
-import com.proxask.repository.QuestionRepository;
+import com.proxask.repository.mongo.QuestionMongoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class IsAuth {
 
-    private final QuestionRepository questionRepository;
+    private final QuestionMongoRepository questionMongoRepository;
 
     public boolean isUserAuthenticated(Authentication authentication, String username) {
         return authentication != null && authentication.isAuthenticated() && authentication.getName().equals(username);
@@ -25,8 +25,8 @@ public class IsAuth {
         if (isAdmin) {
             return true;
         }
-        String username = questionRepository.findById(questionId).orElseThrow(() ->
-                new ResourceNotFoundException("Question not found")).getReceiver().getUsername();
+        String username = questionMongoRepository.findById(questionId).orElseThrow(() ->
+                new ResourceNotFoundException("Question not found: " + questionId)).getReceiverUsername();
         return authentication.getName().equalsIgnoreCase(username);
     }
 }

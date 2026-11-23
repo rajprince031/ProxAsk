@@ -1,4 +1,4 @@
-package com.proxask.repository;
+package com.proxask.repository.jpa;
 
 import com.proxask.entity.PasswordResetToken;
 import com.proxask.entity.User;

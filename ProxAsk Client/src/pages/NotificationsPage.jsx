@@ -17,7 +17,6 @@ import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import EmptyState from '../components/common/EmptyState';
-import { MOCK_NOTIFICATIONS } from '../data/mockData';
 import './NotificationsPage.css';
 
 const formatTime = (ts) => {
@@ -59,13 +58,17 @@ const NotificationsPage = () => {
     setIsLoading(true);
     try {
       const res = await api.get('/notifications');
-      if (res.data && res.data.notifications && res.data.notifications.length > 0) {
+      if (res.data && res.data.notifications) {
         setNotifications(res.data.notifications);
+      } else if (Array.isArray(res.data)) {
+        setNotifications(res.data);
+      } else if (res.data && Array.isArray(res.data.data)) {
+        setNotifications(res.data.data);
       } else {
-        setNotifications(MOCK_NOTIFICATIONS);
+        setNotifications([]);
       }
     } catch {
-      setNotifications(MOCK_NOTIFICATIONS);
+      setNotifications([]);
     } finally {
       setIsLoading(false);
     }

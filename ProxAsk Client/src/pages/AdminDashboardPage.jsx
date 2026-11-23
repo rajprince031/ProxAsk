@@ -29,7 +29,6 @@ import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import EmptyState from '../components/common/EmptyState';
-import { MOCK_ADMIN_USERS, MOCK_FEED_QUESTIONS } from '../data/mockData';
 import './AdminDashboardPage.css';
 
 const AdminDashboardPage = () => {
@@ -78,37 +77,29 @@ const AdminDashboardPage = () => {
       try {
         const res = await api.get('/admin/all-user');
         const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-        if (list.length > 0) {
-          setUsers(list);
-          setStats(prev => ({
-            ...prev,
-            totalUsers: prev.totalUsers || list.length,
-            activeUsers: prev.activeUsers || list.filter(u => u.isActive !== false).length,
-            verifiedUsers: prev.verifiedUsers || list.filter(u => u.isVerified).length,
-          }));
-        } else {
-          setUsers(MOCK_ADMIN_USERS);
-        }
+        setUsers(list);
+        setStats(prev => ({
+          ...prev,
+          totalUsers: prev.totalUsers || list.length,
+          activeUsers: prev.activeUsers || list.filter(u => u.isActive !== false).length,
+          verifiedUsers: prev.verifiedUsers || list.filter(u => u.isVerified).length,
+        }));
       } catch {
-        setUsers(MOCK_ADMIN_USERS);
+        setUsers([]);
       }
 
       // 3. Fetch Questions for Content Moderation
       try {
         const qRes = await api.get('/admin/questions');
         const qList = Array.isArray(qRes.data) ? qRes.data : (qRes.data?.data || []);
-        if (qList.length > 0) {
-          setQuestions(qList);
-          setStats(prev => ({
-            ...prev,
-            totalQuestions: prev.totalQuestions || qList.length,
-            totalAnswers: prev.totalAnswers || qList.filter(q => q.answer).length,
-          }));
-        } else {
-          setQuestions(MOCK_FEED_QUESTIONS);
-        }
+        setQuestions(qList);
+        setStats(prev => ({
+          ...prev,
+          totalQuestions: prev.totalQuestions || qList.length,
+          totalAnswers: prev.totalAnswers || qList.filter(q => q.answer).length,
+        }));
       } catch {
-        setQuestions(MOCK_FEED_QUESTIONS);
+        setQuestions([]);
       }
 
       // 4. Fetch System Health Check

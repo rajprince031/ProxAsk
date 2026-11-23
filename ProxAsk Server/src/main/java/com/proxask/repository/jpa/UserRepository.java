@@ -1,4 +1,4 @@
-package com.proxask.repository;
+package com.proxask.repository.jpa;
 
 import com.proxask.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -28,7 +28,7 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     List<User> findByIsVerifiedFalseAndCreatedAtBefore(LocalDateTime cutoff);
 
-    @Query("SELECT u FROM User u WHERE (u.isVerified = false OR u.verified = false) AND ((u.otpExpiry IS NOT NULL AND u.otpExpiry < :now) OR (u.createdAt IS NOT NULL AND u.createdAt < :cutoff))")
+    @Query("SELECT u FROM User u WHERE (u.isVerified = false OR u.verified = false) AND ((u.otpExpiry IS NOT NULL AND u.otpExpiry < :now) OR (u.verificationExpiresAt IS NOT NULL AND u.verificationExpiresAt < :now) OR (u.createdAt IS NOT NULL AND u.createdAt < :cutoff))")
     List<User> findExpiredUnverifiedUsers(@Param("now") Instant now, @Param("cutoff") LocalDateTime cutoff);
 
     @Transactional

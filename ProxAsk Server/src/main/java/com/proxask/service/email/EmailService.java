@@ -20,12 +20,15 @@ public class EmailService {
     @Value("${app.backend.base-url:http://localhost:8080}")
     private String baseUrl;
 
+    @Value("${app.frontend.url:http://localhost:5173}")
+    private String frontendUrl;
+
     public void sendVerificationEmail(String to, String name, int otp, String verificationToken) {
         try {
             Context context = new Context();
             context.setVariable("name", name != null ? name : "User");
             context.setVariable("otp", otp);
-            String verificationLink = baseUrl + "/verify?token=" + verificationToken;
+            String verificationLink = frontendUrl + "/verify-email?token=" + verificationToken;
             context.setVariable("verificationLink", verificationLink);
 
             String htmlContent = templateEngine.process("Verification-email", context);

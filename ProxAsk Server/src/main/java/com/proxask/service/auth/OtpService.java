@@ -2,8 +2,8 @@ package com.proxask.service.auth;
 
 import com.proxask.entity.EmailVerification;
 import com.proxask.entity.User;
-import com.proxask.repository.EmailVerificationRepository;
-import com.proxask.repository.UserRepository;
+import com.proxask.repository.jpa.EmailVerificationRepository;
+import com.proxask.repository.jpa.UserRepository;
 import com.proxask.service.email.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

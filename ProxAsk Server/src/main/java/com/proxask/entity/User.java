@@ -16,7 +16,7 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-@ToString(exclude = {"sendQuestions", "receiveQuestions", "followers", "followings", "emailVerification", "sessions", "passwordResetTokens", "emailChangeRequests"})
+@ToString(exclude = {"followers", "followings", "emailVerification", "sessions", "passwordResetTokens", "emailChangeRequests"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor
 @NoArgsConstructor
@@ -60,6 +60,8 @@ public class User {
 
     private Instant otpExpiry;
 
+    private Instant verificationExpiresAt;
+
     @Column(nullable = false)
     private int otpAttempts = 0;
 
@@ -90,24 +92,36 @@ public class User {
     public void setVerified(Boolean verified) {
         this.verified = verified;
         this.isVerified = verified;
+        if (Boolean.TRUE.equals(verified)) {
+            this.otpExpiry = null;
+            this.verificationExpiresAt = null;
+        }
     }
 
     public void setIsVerified(Boolean isVerified) {
         this.verified = isVerified;
         this.isVerified = isVerified;
+        if (Boolean.TRUE.equals(isVerified)) {
+            this.otpExpiry = null;
+            this.verificationExpiresAt = null;
+        }
+    }
+
+    public void setOtpExpiry(Instant otpExpiry) {
+        this.otpExpiry = otpExpiry;
+        this.verificationExpiresAt = otpExpiry;
+    }
+
+    public void setVerificationExpiresAt(Instant verificationExpiresAt) {
+        this.verificationExpiresAt = verificationExpiresAt;
+        if (this.otpExpiry == null) {
+            this.otpExpiry = verificationExpiresAt;
+        }
     }
 
     public void setUsername(String username) {
         this.username = username != null ? username.toLowerCase() : null;
     }
-
-    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
-    private List<Question> sendQuestions = new ArrayList<>();
-
-    @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
-    private List<Question> receiveQuestions = new ArrayList<>();
 
     @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL)
     @JsonManagedReference

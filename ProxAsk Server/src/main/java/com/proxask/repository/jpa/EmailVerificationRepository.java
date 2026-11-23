@@ -1,4 +1,4 @@
-package com.proxask.repository;
+package com.proxask.repository.jpa;
 
 import com.proxask.entity.EmailVerification;
 import com.proxask.entity.User;
@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface EmailVerificationRepository extends JpaRepository<EmailVerification, String> {
 
-    Optional <EmailVerification> findByUser(User user);
+    Optional<EmailVerification> findByUser(User user);
 
     @Modifying
     @Transactional

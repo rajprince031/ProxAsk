@@ -1,4 +1,4 @@
-package com.proxask.repository;
+package com.proxask.repository.jpa;
 
 import com.proxask.entity.User;
 import com.proxask.entity.UserSession;

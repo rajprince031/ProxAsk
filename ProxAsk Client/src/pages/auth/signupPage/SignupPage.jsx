@@ -25,8 +25,22 @@ import './SignupPage.css';
 // Sanitize backend messages and convert technical exceptions into friendly explanations
 const formatRegistrationError = (rawError) => {
   if (!rawError) return 'An unexpected error occurred during registration. Please try again.';
-  const str = String(rawError).toLowerCase();
+  // Strip any java class names or stack trace artifacts
+  const clean = String(rawError)
+    .replace(/^.*Exception:\s*/i, '')
+    .replace(/at\s+[\w$.]+\([\w$.]+:\d+\)/g, '')
+    .trim();
+  const str = clean.toLowerCase();
 
+  if (str.includes('awaiting verification')) {
+    return clean;
+  }
+  if (str.includes('username is already registered')) {
+    return 'Username is already registered.';
+  }
+  if (str.includes('email is already registered')) {
+    return 'Email is already registered.';
+  }
   if (str.includes('network') || str.includes('connection') || str.includes('failed to fetch') || str.includes('timeout')) {
     return 'Network connection failure. Server is currently unreachable, please check your connection.';
   }
@@ -42,11 +56,6 @@ const formatRegistrationError = (rawError) => {
   if (str.includes('required') || str.includes('missing')) {
     return 'All registration fields are required. Please check your information.';
   }
-  // Strip any java class names or stack trace artifacts
-  const clean = String(rawError)
-    .replace(/^.*Exception:\s*/i, '')
-    .replace(/at\s+[\w$.]+\([\w$.]+:\d+\)/g, '')
-    .trim();
 
   return clean.length > 0 && clean.length < 150 
     ? clean 
@@ -177,6 +186,7 @@ const SignupPage = () => {
       const result = await register(payload);
 
       if (result && result.success) {
+        sessionStorage.setItem('pendingVerificationEmail', formData.email.trim().toLowerCase());
         showSuccess('Verification code sent to your email');
         navigate('/verify-email', { 
           state: { email: formData.email.trim().toLowerCase() },

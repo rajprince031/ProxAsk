@@ -5,7 +5,7 @@ import com.proxask.entity.User;
 import com.proxask.entity.UserSession;
 import com.proxask.exception.ResourceNotFoundException;
 import com.proxask.exception.VerificationException;
-import com.proxask.repository.UserSessionRepository;
+import com.proxask.repository.jpa.UserSessionRepository;
 import com.proxask.service.jwt.JWTService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Builder;

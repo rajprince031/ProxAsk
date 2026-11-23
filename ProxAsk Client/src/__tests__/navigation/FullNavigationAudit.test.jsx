@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, Link } from 'react-router-dom';
 import App from '../../App';
@@ -10,6 +10,7 @@ import Navbar from '../../components/layout/navbar/Navbar';
 import Sidebar from '../../components/layout/sidebar/Sidebar';
 import MobileNav from '../../components/layout/mobileNav/MobileNav';
 import QuestionCard from '../../components/question/QuestionCard';
+import api from '../../service/AuthService';
 
 const mockGuestAuth = {
   user: null,
@@ -99,6 +100,29 @@ const renderAppWithRoute = (initialRoute = '/', authContext = mockGuestAuth) => 
 };
 
 describe('ProxAsk Full Navigation & Routing Audit (20 Verification Cases)', () => {
+  beforeEach(() => {
+    vi.spyOn(api, 'get').mockImplementation((url) => {
+      if (url === '/user/suggested') {
+        return Promise.resolve({
+          data: {
+            data: [
+              {
+                id: 'u-1',
+                username: 'sarah_tech',
+                firstName: 'Sarah',
+                lastName: 'Tech',
+                bio: 'Tech enthusiast',
+                followersCount: 10,
+                followingCount: 5,
+                questionsCount: 20
+              }
+            ]
+          }
+        });
+      }
+      return Promise.resolve({ data: { data: [] } });
+    });
+  });
   // Case 1: Login -> Signup navigation via link
   it('1. navigates from Login to Signup via link immediately without reload', async () => {
     renderAppWithRoute('/login', mockGuestAuth);

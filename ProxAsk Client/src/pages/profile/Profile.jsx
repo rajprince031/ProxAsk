@@ -30,7 +30,6 @@ import Modal from '../../components/common/Modal';
 import LoadingSkeleton from '../../components/common/LoadingSkeleton';
 import EmptyState from '../../components/common/EmptyState';
 import QuestionCard from '../../components/question/QuestionCard';
-import { MOCK_FEED_QUESTIONS, MOCK_SUGGESTED_USERS } from '../../data/mockData';
 import './Profile.css';
 
 const Profile = () => {
@@ -75,6 +74,8 @@ const Profile = () => {
     isOpen: false,
     type: 'followers', // 'followers' | 'following'
   });
+  const [connectionsList, setConnectionsList] = useState([]);
+  const [isLoadingConnections, setIsLoadingConnections] = useState(false);
 
   // Active Tab: 'questions' | 'about'
   const [activeTab, setActiveTab] = useState('questions');
@@ -92,21 +93,13 @@ const Profile = () => {
     if (!username) return;
     try {
       const res = await api.get(`/ask/${encodeURIComponent(username)}`);
-      if (res.data && res.data.data && res.data.data.length > 0) {
+      if (res.data && Array.isArray(res.data.data)) {
         setQuestions(res.data.data);
       } else {
-        const matched = MOCK_FEED_QUESTIONS.filter(q =>
-          q.receiverUsername?.toLowerCase() === username.toLowerCase() ||
-          q.senderUsername?.toLowerCase() === username.toLowerCase()
-        );
-        setQuestions(matched.length > 0 ? matched : MOCK_FEED_QUESTIONS);
+        setQuestions([]);
       }
     } catch {
-      const matched = MOCK_FEED_QUESTIONS.filter(q =>
-        q.receiverUsername?.toLowerCase() === username.toLowerCase() ||
-        q.senderUsername?.toLowerCase() === username.toLowerCase()
-      );
-      setQuestions(matched.length > 0 ? matched : MOCK_FEED_QUESTIONS);
+      setQuestions([]);
     }
   }, []);
 
@@ -169,22 +162,8 @@ const Profile = () => {
         });
         fetchQuestions(currentUser.username);
       } else {
-        // Fallback for mock users
-        const fallback = {
-          id: `user-${targetIdentifier}`,
-          username: targetIdentifier,
-          firstName: targetIdentifier,
-          lastName: '',
-          bio: 'Creator profile on ProxAsk.',
-          followersCount: 85,
-          followingCount: 30,
-          questionsCount: 12,
-          answersCount: 10,
-          isPrivate: initialPrivacy,
-        };
-        setProfileUser(fallback);
-        setIsPrivate(initialPrivacy);
-        fetchQuestions(targetIdentifier);
+        setProfileUser(null);
+        setQuestions([]);
       }
     } finally {
       setIsLoading(false);
@@ -359,7 +338,6 @@ const Profile = () => {
     if (!askContent.trim() || !profileUser?.username) return;
 
     setIsSubmittingAsk(true);
-    let newQ = null;
     try {
       const res = await api.post(`/ask/${encodeURIComponent(profileUser.username)}`, {
         content: askContent.trim(),
@@ -367,44 +345,30 @@ const Profile = () => {
       });
 
       if (res.data && res.data.data) {
-        newQ = res.data.data;
+        setQuestions(prev => [res.data.data, ...prev]);
+        setAskContent('');
+        setShowAskModal(false);
+        showSuccess(`Question sent to @${profileUser.username}!`);
       }
-    } catch {
-      newQ = {
-        id: `mock-q-${Date.now()}`,
-        content: askContent.trim(),
-        senderUsername: askAnonymous ? null : (currentUser?.username || 'anonymous'),
-        isAnonymous: askAnonymous,
-        receiverUsername: profileUser.username,
-        createdAt: new Date().toISOString(),
-        answer: null
-      };
+    } catch (err) {
+      showError(err.response?.data?.message || 'Failed to send question');
+    } finally {
+      setIsSubmittingAsk(false);
     }
-
-    if (newQ) {
-      setQuestions(prev => [newQ, ...prev]);
-      setAskContent('');
-      setShowAskModal(false);
-      showSuccess(`Question sent to @${profileUser.username}!`);
-    }
-    setIsSubmittingAsk(false);
   };
 
   const handleAnswerSubmit = async (questionId, content) => {
     try {
-      await api.post(`/answer/${questionId}`, { content });
-    } catch {
-      // offline fallback
+      const res = await api.post(`/answer/${questionId}`, { content });
+      const savedAnswer = res.data?.data || { content, createdAt: new Date().toISOString() };
+      setQuestions(prev => prev.map(q => q.id === questionId ? {
+        ...q,
+        answer: savedAnswer
+      } : q));
+      showSuccess('Answer published!');
+    } catch (err) {
+      showError(err.response?.data?.message || 'Failed to publish answer');
     }
-    setQuestions(prev => prev.map(q => q.id === questionId ? {
-      ...q,
-      answer: {
-        id: `mock-ans-${Date.now()}`,
-        content,
-        createdAt: new Date().toISOString()
-      }
-    } : q));
-    showSuccess('Answer published!');
   };
 
   const handleDeleteQuestion = async (questionId) => {
@@ -412,9 +376,8 @@ const Profile = () => {
       await api.delete(`/ask/${questionId}`);
       setQuestions(prev => prev.filter(q => q.id !== questionId));
       showSuccess('Question removed.');
-    } catch {
-      setQuestions(prev => prev.filter(q => q.id !== questionId));
-      showSuccess('Question removed.');
+    } catch (err) {
+      showError(err.response?.data?.message || 'Failed to remove question.');
     }
   };
 
@@ -423,9 +386,8 @@ const Profile = () => {
       await api.delete(`/answer/${questionId}`);
       setQuestions(prev => prev.map(q => q.id === questionId ? { ...q, answer: null } : q));
       showSuccess('Answer deleted.');
-    } catch {
-      setQuestions(prev => prev.map(q => q.id === questionId ? { ...q, answer: null } : q));
-      showSuccess('Answer deleted.');
+    } catch (err) {
+      showError(err.response?.data?.message || 'Failed to delete answer.');
     }
   };
 
@@ -433,26 +395,44 @@ const Profile = () => {
     try {
       await api.post(`/answer/${answerId}/like`, { isLiked });
     } catch {
-      // offline fallback
+      // ignore
     }
   };
 
   const handleVisibilityChange = async (questionId, newVisibility) => {
     try {
       await api.put(`/ask/${questionId}/visibility`, { visibility: newVisibility });
-    } catch {
-      // offline fallback
+      setQuestions(prev => prev.map(q => q.id === questionId ? { ...q, visibility: newVisibility } : q));
+    } catch (err) {
+      showError(err.response?.data?.message || 'Failed to change visibility');
     }
-    setQuestions(prev => prev.map(q => q.id === questionId ? { ...q, visibility: newVisibility } : q));
   };
 
   // Open connections modal (allowed if public or owner or following)
-  const handleOpenConnections = (type) => {
+  const handleOpenConnections = async (type) => {
     if (isPrivate && !isOwnProfile && !isFollowing) {
       showError('This account is private. Follow this account to see their followers and following.');
       return;
     }
+    const uname = userToDisplay?.username || targetIdentifier;
     setConnectionsModal({ isOpen: true, type });
+    setIsLoadingConnections(true);
+    setConnectionsList([]);
+    try {
+      const endpoint = type === 'followers'
+        ? `/followers/${encodeURIComponent(uname)}`
+        : `/following/${encodeURIComponent(uname)}`;
+      const res = await api.get(endpoint);
+      if (res.data && Array.isArray(res.data.data)) {
+        setConnectionsList(res.data.data);
+      } else {
+        setConnectionsList([]);
+      }
+    } catch {
+      setConnectionsList([]);
+    } finally {
+      setIsLoadingConnections(false);
+    }
   };
 
   if (isLoading) {
@@ -467,6 +447,24 @@ const Profile = () => {
   }
 
   const userToDisplay = profileUser || currentUser;
+
+  if (!userToDisplay) {
+    return (
+      <div className="px-profile" data-testid="profile-page">
+        <EmptyState
+          icon={<Users size={48} />}
+          title="User not found"
+          description={`The user @${targetIdentifier} does not exist or has been removed.`}
+          action={
+            <Button variant="primary" onClick={() => navigate('/')}>
+              Back to Home
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
   const isPrivateRestricted = isPrivate && !isOwnProfile && !isFollowing;
 
   return (
@@ -968,37 +966,45 @@ const Profile = () => {
         maxWidth="460px"
       >
         <div className="px-profile__connections-list" data-testid="connections-modal-list">
-          {MOCK_SUGGESTED_USERS.slice(0, 4).map((u) => (
-            <div key={u.id} className="px-profile__connection-item">
-              <div className="px-profile__connection-user">
-                <Avatar
-                  src={u.avatar}
-                  name={`${u.firstName} ${u.lastName}`}
-                  username={u.username}
-                  size="sm"
-                />
-                <div>
-                  <Link
-                    to={`/profile/${u.username}`}
-                    className="px-profile__connection-name"
-                    onClick={() => setConnectionsModal({ isOpen: false, type: 'followers' })}
-                  >
-                    {u.firstName} {u.lastName}
-                  </Link>
-                  <span className="px-profile__connection-handle font-mono">
-                    @{u.username}
-                  </span>
+          {isLoadingConnections ? (
+            <div style={{ padding: '24px', textAlign: 'center' }}>
+              <LoadingSkeleton count={3} />
+            </div>
+          ) : connectionsList.length === 0 ? (
+            <EmptyState
+              icon={<Users size={32} />}
+              title={connectionsModal.type === 'followers' ? 'No followers yet' : 'Not following anyone yet'}
+              description={
+                connectionsModal.type === 'followers'
+                  ? `@${userToDisplay?.username} does not have any followers yet.`
+                  : `@${userToDisplay?.username} is not following anyone yet.`
+              }
+            />
+          ) : (
+            connectionsList.map((uname) => (
+              <div key={uname} className="px-profile__connection-item">
+                <div className="px-profile__connection-user">
+                  <Avatar
+                    name={uname}
+                    username={uname}
+                    size="sm"
+                  />
+                  <div>
+                    <Link
+                      to={`/profile/${uname}`}
+                      className="px-profile__connection-name"
+                      onClick={() => setConnectionsModal({ isOpen: false, type: 'followers' })}
+                    >
+                      {uname}
+                    </Link>
+                    <span className="px-profile__connection-handle font-mono">
+                      @{uname}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => showSuccess(`Follow status toggled for @${u.username}`)}
-              >
-                Follow
-              </Button>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </Modal>
     </div>

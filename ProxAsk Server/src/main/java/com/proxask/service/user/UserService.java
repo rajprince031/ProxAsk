@@ -3,10 +3,10 @@ package com.proxask.service.user;
 import com.proxask.dto.UserDTO;
 import com.proxask.entity.User;
 import com.proxask.exception.ResourceNotFoundException;
-import com.proxask.repository.AnswerRepository;
-import com.proxask.repository.FollowRepository;
-import com.proxask.repository.QuestionRepository;
-import com.proxask.repository.UserRepository;
+import com.proxask.repository.jpa.FollowRepository;
+import com.proxask.repository.jpa.UserRepository;
+import com.proxask.repository.mongo.AnswerMongoRepository;
+import com.proxask.repository.mongo.QuestionMongoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.proxask.mapper.UserMapper;
@@ -27,7 +27,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
-    private final QuestionRepository questionRepository;
+    private final QuestionMongoRepository questionMongoRepository;
+    private final AnswerMongoRepository answerMongoRepository;
     private final UserMapper userMapper;
 
     @Transactional(readOnly = true)
@@ -167,12 +168,13 @@ public class UserService {
         }
         long followersCount = followRepository.countByFollowingAndStatus(user, com.proxask.enums.FollowStatus.ACCEPTED);
         long followingCount = followRepository.countByFollowerAndStatus(user, com.proxask.enums.FollowStatus.ACCEPTED);
-        long questionsCount = questionRepository.findByReceiver(user).size();
+        long questionsCount = questionMongoRepository.countByReceiverUsername(user.getUsername());
+        long answersCount = answerMongoRepository.countByCreatorUserId(user.getId());
 
         dto.setFollowersCount(followersCount);
         dto.setFollowingCount(followingCount);
         dto.setQuestionsCount(questionsCount);
-        dto.setAnswersCount(0L);
+        dto.setAnswersCount(answersCount);
         dto.setIsPrivate(user.getIsPrivate() != null ? user.getIsPrivate() : false);
         return dto;
     }

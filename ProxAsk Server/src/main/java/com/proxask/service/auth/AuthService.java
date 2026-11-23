@@ -7,7 +7,7 @@ import com.proxask.dto.auth.RegisterRequest;
 import com.proxask.entity.User;
 import com.proxask.exception.VerificationException;
 import com.proxask.mapper.UserMapper;
-import com.proxask.repository.UserRepository;
+import com.proxask.repository.jpa.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -89,7 +89,10 @@ public class AuthService {
 
         if (!user.isVerified()) {
             boolean isExpired = false;
-            if (user.getOtpExpiry() != null && Instant.now().isAfter(user.getOtpExpiry())) {
+            Instant now = Instant.now();
+            if (user.getOtpExpiry() != null && now.isAfter(user.getOtpExpiry())) {
+                isExpired = true;
+            } else if (user.getVerificationExpiresAt() != null && now.isAfter(user.getVerificationExpiresAt())) {
                 isExpired = true;
             } else if (user.getCreatedAt() != null && user.getCreatedAt().isBefore(LocalDateTime.now().minusMinutes(10))) {
                 isExpired = true;
@@ -97,7 +100,7 @@ public class AuthService {
 
             if (isExpired) {
                 verificationSupportService.deleteUnverifiedUser(user);
-                throw new VerificationException("Registration has expired after 10 minutes. Your unverified registration has been deleted—please sign up again.");
+                throw new VerificationException("Your verification link/OTP has expired. Please register again.");
             }
 
             throw new VerificationException("Email not verified");

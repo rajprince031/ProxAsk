@@ -25,7 +25,6 @@ import Modal from '../../components/common/Modal';
 import LoadingSkeleton from '../../components/common/LoadingSkeleton';
 import EmptyState from '../../components/common/EmptyState';
 import QuestionCard from '../../components/question/QuestionCard';
-import { MOCK_FEED_QUESTIONS, MOCK_SUGGESTED_USERS, MOCK_NOTIFICATIONS } from '../../data/mockData';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -54,40 +53,31 @@ const Dashboard = () => {
     else setIsLoading(true);
 
     try {
-      // 1. Fetch Feed Questions (with mock fallback for offline/test accounts)
+      // 1. Fetch Feed Questions
       try {
         const feedRes = await api.get('/questions/feed');
-        if (feedRes.data && feedRes.data.data && feedRes.data.data.length > 0) {
-          setFeedQuestions(feedRes.data.data);
-        } else {
-          setFeedQuestions(MOCK_FEED_QUESTIONS);
-        }
+        const qList = feedRes.data?.data || (Array.isArray(feedRes.data) ? feedRes.data : []);
+        setFeedQuestions(qList);
       } catch {
-        setFeedQuestions(MOCK_FEED_QUESTIONS);
+        setFeedQuestions([]);
       }
 
-      // 2. Fetch Suggested Users (with mock fallback)
+      // 2. Fetch Suggested Users
       try {
         const usersRes = await api.get('/user/suggested');
-        if (usersRes.data && usersRes.data.data && usersRes.data.data.length > 0) {
-          setSuggestedUsers(usersRes.data.data);
-        } else {
-          setSuggestedUsers(MOCK_SUGGESTED_USERS);
-        }
+        const uList = usersRes.data?.data || (Array.isArray(usersRes.data) ? usersRes.data : []);
+        setSuggestedUsers(uList);
       } catch {
-        setSuggestedUsers(MOCK_SUGGESTED_USERS);
+        setSuggestedUsers([]);
       }
 
       // 3. Fetch Notifications Preview
       try {
         const notifRes = await api.get('/notifications');
-        if (notifRes.data && notifRes.data.notifications && notifRes.data.notifications.length > 0) {
-          setRecentNotifications(notifRes.data.notifications.slice(0, 3));
-        } else {
-          setRecentNotifications(MOCK_NOTIFICATIONS.slice(0, 3));
-        }
+        const nList = notifRes.data?.notifications || (Array.isArray(notifRes.data) ? notifRes.data : []);
+        setRecentNotifications(nList.slice(0, 3));
       } catch {
-        setRecentNotifications(MOCK_NOTIFICATIONS.slice(0, 3));
+        setRecentNotifications([]);
       }
     } finally {
       setIsLoading(false);
@@ -127,39 +117,40 @@ const Dashboard = () => {
 
   const handleAnswerSubmit = async (questionId, content) => {
     try {
-      await api.post(`/answer/${questionId}`, { content });
-    } catch {
-      // In demo mode, apply local optimistic update
-    }
-    setFeedQuestions(prev => prev.map(q => q.id === questionId ? {
-      ...q,
-      answer: {
-        id: `mock-ans-${Date.now()}`,
+      const res = await api.post(`/answer/${questionId}`, { content });
+      const ansData = res.data?.data || {
+        id: `ans-${Date.now()}`,
         content,
         createdAt: new Date().toISOString()
-      }
-    } : q));
-    showSuccess('Answer published to your feed!');
+      };
+      setFeedQuestions(prev => prev.map(q => q.id === questionId ? {
+        ...q,
+        answer: ansData
+      } : q));
+      showSuccess('Answer published to your feed!');
+    } catch (err) {
+      showError(err.response?.data?.message || 'Failed to publish answer');
+    }
   };
 
   const handleDeleteQuestion = async (questionId) => {
     try {
       await api.delete(`/ask/${questionId}`);
-    } catch {
-      // Local removal in demo mode
+      setFeedQuestions(prev => prev.filter(q => q.id !== questionId));
+      showSuccess('Question removed.');
+    } catch (err) {
+      showError(err.response?.data?.message || 'Failed to delete question');
     }
-    setFeedQuestions(prev => prev.filter(q => q.id !== questionId));
-    showSuccess('Question removed.');
   };
 
   const handleDeleteAnswer = async (questionId) => {
     try {
       await api.delete(`/answer/${questionId}`);
-    } catch {
-      // Local removal in demo mode
+      setFeedQuestions(prev => prev.map(q => q.id === questionId ? { ...q, answer: null } : q));
+      showSuccess('Answer deleted.');
+    } catch (err) {
+      showError(err.response?.data?.message || 'Failed to delete answer');
     }
-    setFeedQuestions(prev => prev.map(q => q.id === questionId ? { ...q, answer: null } : q));
-    showSuccess('Answer deleted.');
   };
 
   const handleLikeAnswer = async (answerId, isLiked) => {
@@ -173,10 +164,10 @@ const Dashboard = () => {
   const handleVisibilityChange = async (questionId, newVisibility) => {
     try {
       await api.put(`/ask/${questionId}/visibility`, { visibility: newVisibility });
-    } catch {
-      // offline fallback
+      setFeedQuestions(prev => prev.map(q => q.id === questionId ? { ...q, visibility: newVisibility } : q));
+    } catch (err) {
+      showError(err.response?.data?.message || 'Failed to update visibility');
     }
-    setFeedQuestions(prev => prev.map(q => q.id === questionId ? { ...q, visibility: newVisibility } : q));
   };
 
   const handlePostQuestion = async (e) => {
@@ -192,7 +183,6 @@ const Dashboard = () => {
     }
 
     setIsSubmittingAsk(true);
-    let newQ = null;
     try {
       const res = await api.post(`/ask/${encodeURIComponent(target)}`, {
         content: askContent.trim(),
@@ -200,29 +190,17 @@ const Dashboard = () => {
       });
 
       if (res.data && res.data.data) {
-        newQ = res.data.data;
+        setFeedQuestions(prev => [res.data.data, ...prev]);
+        setShowAskModal(false);
+        setAskContent('');
+        setAskTargetUsername('');
+        showSuccess(`Question sent to @${target}!`);
       }
-    } catch {
-      // Create local item in demo mode
-      newQ = {
-        id: `mock-q-${Date.now()}`,
-        content: askContent.trim(),
-        senderUsername: askAnonymous ? null : (user?.username || 'anonymous'),
-        isAnonymous: askAnonymous,
-        receiverUsername: target,
-        createdAt: new Date().toISOString(),
-        answer: null,
-      };
+    } catch (err) {
+      showError(err.response?.data?.message || 'Failed to send question');
+    } finally {
+      setIsSubmittingAsk(false);
     }
-
-    if (newQ) {
-      setFeedQuestions(prev => [newQ, ...prev]);
-      setShowAskModal(false);
-      setAskContent('');
-      setAskTargetUsername('');
-      showSuccess(`Question sent to @${target}!`);
-    }
-    setIsSubmittingAsk(false);
   };
 
   return (

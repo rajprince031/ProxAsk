@@ -1,6 +1,5 @@
-package com.proxask.repository;
+package com.proxask.repository.jpa;
 
-import com.proxask.entity.Answer;
 import com.proxask.entity.AnswerLike;
 import com.proxask.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,8 +9,8 @@ import java.util.Optional;
 
 @Repository
 public interface AnswerLikeRepository extends JpaRepository<AnswerLike, String> {
-    boolean existsByUserAndAnswer(User user, Answer answer);
-    Optional<AnswerLike> findByUserAndAnswer(User user, Answer answer);
-    long countByAnswer(Answer answer);
-    void deleteByUserAndAnswer(User user, Answer answer);
+    boolean existsByUserAndAnswerId(User user, String answerId);
+    Optional<AnswerLike> findByUserAndAnswerId(User user, String answerId);
+    long countByAnswerId(String answerId);
+    void deleteByUserAndAnswerId(User user, String answerId);
 }

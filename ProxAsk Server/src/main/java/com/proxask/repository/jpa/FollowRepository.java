@@ -1,4 +1,4 @@
-package com.proxask.repository;
+package com.proxask.repository.jpa;
 
 import com.proxask.entity.Follow;
 import com.proxask.entity.User;

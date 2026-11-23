@@ -1,7 +1,7 @@
 package com.proxask.service.user;
 
 import com.proxask.entity.User;
-import com.proxask.repository.UserRepository;
+import com.proxask.repository.jpa.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

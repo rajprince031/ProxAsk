@@ -1,9 +1,9 @@
 package com.proxask.service.auth;
 
 import com.proxask.entity.User;
-import com.proxask.repository.EmailVerificationRepository;
-import com.proxask.repository.UserRepository;
-import com.proxask.repository.UserSessionRepository;
+import com.proxask.repository.jpa.EmailVerificationRepository;
+import com.proxask.repository.jpa.UserRepository;
+import com.proxask.repository.jpa.UserSessionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

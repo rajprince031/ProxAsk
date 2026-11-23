@@ -1,17 +1,27 @@
 package com.proxask;
 
+import com.mongodb.client.MongoClient;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
-import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 
 @SpringBootTest
-@EnableAutoConfiguration(exclude = {MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
 class ProxaskApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+    @TestConfiguration
+    static class TestMongoConfig {
+        @Bean
+        @Primary
+        public MongoClient mongoClient() {
+            return Mockito.mock(MongoClient.class);
+        }
+    }
+
+    @Test
+    void contextLoads() {
+    }
 
 }

@@ -2,6 +2,7 @@ package com.proxask.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
     @UniqueConstraint(columnNames = {"user_id", "answer_id"})
 })
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class AnswerLike {
@@ -25,9 +27,8 @@ public class AnswerLike {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "answer_id", nullable = false)
-    private Answer answer;
+    @Column(name = "answer_id", nullable = false)
+    private String answerId;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

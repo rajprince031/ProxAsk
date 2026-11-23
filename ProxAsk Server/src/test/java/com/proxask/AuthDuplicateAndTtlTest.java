@@ -4,8 +4,8 @@ import com.proxask.entity.User;
 import com.proxask.exception.EmailAlreadyInUseException;
 import com.proxask.exception.UsernameAlreadyInUseException;
 import com.proxask.exception.VerificationException;
-import com.proxask.repository.EmailVerificationRepository;
-import com.proxask.repository.UserRepository;
+import com.proxask.repository.jpa.EmailVerificationRepository;
+import com.proxask.repository.jpa.UserRepository;
 import com.proxask.service.auth.VerificationSupportService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -89,13 +89,26 @@ class AuthDuplicateAndTtlTest {
     }
 
     @Test
-    @DisplayName("Registration with email pending verification (< 10 mins) throws VerificationException with guidance")
+    @DisplayName("Registration with email pending verification (< 10 mins) throws EmailAlreadyInUseException with awaiting verification guidance")
     void testPendingUnverifiedEmailRejected() {
         when(userRepository.findByEmail("pending@proxask.com")).thenReturn(Optional.of(pendingUnverifiedUser));
 
         assertThatThrownBy(() -> verificationSupportService.cleanupUnverifiedConflicts("pending@proxask.com", "other_user"))
-                .isInstanceOf(VerificationException.class)
-                .hasMessageContaining("pending verification");
+                .isInstanceOf(EmailAlreadyInUseException.class)
+                .hasMessage("This email is already registered and awaiting verification.");
+
+        verify(userRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("Registration with username pending verification (< 10 mins) throws UsernameAlreadyInUseException with awaiting verification guidance")
+    void testPendingUnverifiedUsernameRejected() {
+        when(userRepository.findByEmail("new_user@proxask.com")).thenReturn(Optional.empty());
+        when(userRepository.findByUsername("pending_user")).thenReturn(Optional.of(pendingUnverifiedUser));
+
+        assertThatThrownBy(() -> verificationSupportService.cleanupUnverifiedConflicts("new_user@proxask.com", "pending_user"))
+                .isInstanceOf(UsernameAlreadyInUseException.class)
+                .hasMessage("This username is already registered and awaiting verification.");
 
         verify(userRepository, never()).delete(any());
     }

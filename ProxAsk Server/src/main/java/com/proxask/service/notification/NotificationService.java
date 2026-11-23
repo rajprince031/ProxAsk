@@ -1,15 +1,16 @@
 package com.proxask.service.notification;
 
-import com.proxask.entity.Notification;
+import com.proxask.document.ActorSnapshot;
+import com.proxask.document.NotificationDocument;
 import com.proxask.entity.User;
 import com.proxask.exception.ResourceNotFoundException;
-import com.proxask.repository.NotificationRepository;
+import com.proxask.repository.mongo.NotificationMongoRepository;
 import com.proxask.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,18 +19,17 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class NotificationService {
 
-    private final NotificationRepository notificationRepository;
+    private final NotificationMongoRepository notificationMongoRepository;
     private final UserService userService;
 
-    @Transactional(readOnly = true)
     public Map<String, Object> getNotifications() {
         User currentUser = userService.getCurrentAuthenticatedUser();
         if (currentUser == null) {
             throw new AccessDeniedException("User must be authenticated to retrieve notifications.");
         }
 
-        List<Notification> list = notificationRepository.findByRecipientOrderByCreatedAtDesc(currentUser);
-        long unreadCount = notificationRepository.countByRecipientAndIsReadFalse(currentUser);
+        List<NotificationDocument> list = notificationMongoRepository.findByRecipientIdOrderByCreatedAtDesc(currentUser.getId());
+        long unreadCount = notificationMongoRepository.countByRecipientIdAndIsReadFalse(currentUser.getId());
 
         List<Map<String, Object>> mapped = list.stream().map(n -> {
             Map<String, Object> map = new HashMap<>();
@@ -40,6 +40,7 @@ public class NotificationService {
             map.put("read", n.getIsRead());
             map.put("createdAt", n.getCreatedAt());
             map.put("user", n.getActor() != null ? n.getActor().getUsername() : "Anonymous");
+            map.put("avatar", n.getActor() != null ? n.getActor().getAvatar() : null);
             return map;
         }).toList();
 
@@ -49,57 +50,68 @@ public class NotificationService {
         return result;
     }
 
-    @Transactional(readOnly = true)
     public long getUnreadCount() {
         User currentUser = userService.getCurrentAuthenticatedUser();
         if (currentUser == null) {
             return 0;
         }
-        return notificationRepository.countByRecipientAndIsReadFalse(currentUser);
+        return notificationMongoRepository.countByRecipientIdAndIsReadFalse(currentUser.getId());
     }
 
-    @Transactional
     public void markAsRead(String notificationId) {
-        Notification notification = notificationRepository.findById(notificationId)
+        NotificationDocument notification = notificationMongoRepository.findById(notificationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Notification not found: " + notificationId));
         notification.setIsRead(true);
-        notificationRepository.save(notification);
+        notificationMongoRepository.save(notification);
     }
 
-    @Transactional
     public void markAllAsRead() {
         User currentUser = userService.getCurrentAuthenticatedUser();
         if (currentUser != null) {
-            List<Notification> list = notificationRepository.findByRecipientOrderByCreatedAtDesc(currentUser);
+            List<NotificationDocument> list = notificationMongoRepository.findByRecipientIdOrderByCreatedAtDesc(currentUser.getId());
             list.forEach(n -> n.setIsRead(true));
-            notificationRepository.saveAll(list);
+            notificationMongoRepository.saveAll(list);
         }
     }
 
-    @Transactional
     public void deleteNotification(String notificationId) {
-        notificationRepository.deleteById(notificationId);
+        notificationMongoRepository.deleteById(notificationId);
     }
 
-    @Transactional
     public void clearAll() {
         User currentUser = userService.getCurrentAuthenticatedUser();
         if (currentUser != null) {
-            notificationRepository.deleteByRecipient(currentUser);
+            notificationMongoRepository.deleteByRecipientId(currentUser.getId());
         }
     }
 
-    @Transactional
-    public void createNotification(User recipient, User actor, String type, String message, String targetId) {
-        if (recipient == null) return;
-        Notification notification = Notification.builder()
-                .recipient(recipient)
+    public void createNotification(String recipientId, String actorUsername, String actorAvatar, String actorUserId, String type, String message, String targetId) {
+        if (recipientId == null) return;
+        ActorSnapshot actor = null;
+        if (actorUsername != null || actorUserId != null) {
+            actor = ActorSnapshot.builder()
+                    .userId(actorUserId)
+                    .username(actorUsername)
+                    .avatar(actorAvatar)
+                    .build();
+        }
+        NotificationDocument notification = NotificationDocument.builder()
+                .recipientId(recipientId)
                 .actor(actor)
                 .type(type)
                 .message(message)
                 .targetId(targetId)
                 .isRead(false)
+                .createdAt(Instant.now())
                 .build();
-        notificationRepository.save(notification);
+        notificationMongoRepository.save(notification);
+    }
+
+    public void createNotification(User recipient, User actor, String type, String message, String targetId) {
+        if (recipient == null) return;
+        String actorUsername = actor != null ? actor.getUsername() : "Anonymous";
+        String actorAvatar = actor != null ? actor.getAvatar() : null;
+        String actorUserId = actor != null ? actor.getId() : null;
+        createNotification(recipient.getId(), actorUsername, actorAvatar, actorUserId, type, message, targetId);
     }
 }

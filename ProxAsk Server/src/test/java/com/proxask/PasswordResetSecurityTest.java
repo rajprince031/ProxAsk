@@ -2,9 +2,9 @@ package com.proxask;
 
 import com.proxask.entity.PasswordResetToken;
 import com.proxask.entity.User;
-import com.proxask.repository.PasswordResetTokenRepository;
-import com.proxask.repository.UserRepository;
-import com.proxask.repository.UserSessionRepository;
+import com.proxask.repository.jpa.PasswordResetTokenRepository;
+import com.proxask.repository.jpa.UserRepository;
+import com.proxask.repository.jpa.UserSessionRepository;
 import com.proxask.service.auth.AccountSecurityService;
 import com.proxask.service.auth.SessionService;
 import com.proxask.service.jwt.JWTService;

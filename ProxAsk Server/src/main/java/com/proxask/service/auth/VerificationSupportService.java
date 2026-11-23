@@ -5,7 +5,7 @@ import com.proxask.entity.User;
 import com.proxask.exception.EmailAlreadyInUseException;
 import com.proxask.exception.UsernameAlreadyInUseException;
 import com.proxask.exception.VerificationException;
-import com.proxask.repository.*;
+import com.proxask.repository.jpa.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -68,6 +68,7 @@ public class VerificationSupportService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void cleanupUnverifiedConflicts(String email, String username) {
         LocalDateTime tenMinutesAgo = LocalDateTime.now().minusMinutes(10);
+        Instant now = Instant.now();
 
         if (email != null && !email.trim().isEmpty()) {
             userRepository.findByEmail(email.trim().toLowerCase()).ifPresent(user -> {
@@ -75,13 +76,15 @@ public class VerificationSupportService {
                     throw new EmailAlreadyInUseException("Email is already registered.");
                 }
                 boolean expired = false;
-                if (user.getOtpExpiry() != null && Instant.now().isAfter(user.getOtpExpiry())) {
+                if (user.getOtpExpiry() != null && now.isAfter(user.getOtpExpiry())) {
+                    expired = true;
+                } else if (user.getVerificationExpiresAt() != null && now.isAfter(user.getVerificationExpiresAt())) {
                     expired = true;
                 } else if (user.getCreatedAt() != null && user.getCreatedAt().isBefore(tenMinutesAgo)) {
                     expired = true;
                 }
                 if (!expired) {
-                    throw new VerificationException("An account with this email is pending verification. Please check your email for the OTP or wait 10 minutes.");
+                    throw new EmailAlreadyInUseException("This email is already registered and awaiting verification.");
                 }
                 log.info("Cleaning up abandoned unverified user with email {} (past 10-minute TTL)", email);
                 deleteUnverifiedUser(user);
@@ -94,13 +97,15 @@ public class VerificationSupportService {
                     throw new UsernameAlreadyInUseException("Username is already registered.");
                 }
                 boolean expired = false;
-                if (user.getOtpExpiry() != null && Instant.now().isAfter(user.getOtpExpiry())) {
+                if (user.getOtpExpiry() != null && now.isAfter(user.getOtpExpiry())) {
+                    expired = true;
+                } else if (user.getVerificationExpiresAt() != null && now.isAfter(user.getVerificationExpiresAt())) {
                     expired = true;
                 } else if (user.getCreatedAt() != null && user.getCreatedAt().isBefore(tenMinutesAgo)) {
                     expired = true;
                 }
                 if (!expired) {
-                    throw new VerificationException("An account with this username is pending verification. Please check your email for the OTP or wait 10 minutes.");
+                    throw new UsernameAlreadyInUseException("This username is already registered and awaiting verification.");
                 }
                 log.info("Cleaning up abandoned unverified user with username {} (past 10-minute TTL)", username);
                 deleteUnverifiedUser(user);

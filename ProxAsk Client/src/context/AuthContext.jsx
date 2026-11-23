@@ -6,7 +6,7 @@ export const AuthContext = createContext();
 const initialState = {
   user: null,
   token: null,
-  loading: true,
+  loading: true, // Only true on initial startup session check
   isAuthenticated: false,
   error: null
 };
@@ -37,6 +37,11 @@ const authReducer = (state, action) => {
         token: null,
         error: action.payload
       };
+    case 'SET_ERROR':
+      return {
+        ...state,
+        error: action.payload
+      };
     case 'LOGOUT':
       return {
         ...state,
@@ -64,7 +69,7 @@ const authReducer = (state, action) => {
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Check for existing token on app load
+  // Check for existing token on app load strictly once
   useEffect(() => {
     const checkAuthStatus = async () => {
       const token = localStorage.getItem('proxask_token');
@@ -88,9 +93,9 @@ export const AuthProvider = ({ children }) => {
     checkAuthStatus();
   }, []);
 
-  const login = async (credentials) => {
+  // Decoupled: do NOT toggle global loading during user actions (prevents unmounting active routes)
+  const login = useCallback(async (credentials) => {
     try {
-      dispatch({ type: 'AUTH_START' });
       const response = await authService.login(credentials);
       const { user, token } = response;
       
@@ -112,16 +117,11 @@ export const AuthProvider = ({ children }) => {
       });
       return { success: false, error: errorMessage };
     }
-  };
+  }, []);
 
-  const register = async (userData) => {
+  const register = useCallback(async (userData) => {
     try {
-      dispatch({ type: 'AUTH_START' });
       const response = await authService.register(userData);
-      
-      // Don't automatically log in after registration
-      // User needs to verify email first
-      dispatch({ type: 'AUTH_FAILURE', payload: null });
       
       return { 
         success: true, 
@@ -132,19 +132,16 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || 'Registration failed';
       dispatch({
-        type: 'AUTH_FAILURE',
+        type: 'SET_ERROR',
         payload: errorMessage
       });
       return { success: false, error: errorMessage };
     }
-  };
+  }, []);
 
-  const verifyEmail = async (verificationData) => {
+  const verifyEmail = useCallback(async (verificationData) => {
     try {
-      dispatch({ type: 'AUTH_START' });
       const response = await authService.verifyEmail(verificationData);
-      
-      dispatch({ type: 'AUTH_FAILURE', payload: null });
       return { 
         success: true, 
         message: response?.message || 'Account verified and created successfully!',
@@ -152,15 +149,11 @@ export const AuthProvider = ({ children }) => {
       };
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || 'Email verification failed';
-      dispatch({
-        type: 'AUTH_FAILURE',
-        payload: errorMessage
-      });
       return { success: false, error: errorMessage };
     }
-  };
+  }, []);
 
-  const forgotPassword = async (email) => {
+  const forgotPassword = useCallback(async (email) => {
     try {
       await authService.forgotPassword(email);
       return { success: true, message: 'Password reset OTP sent to your email address.' };
@@ -168,9 +161,9 @@ export const AuthProvider = ({ children }) => {
       const errorMessage = error.response?.data?.message || error.message || 'Failed to send reset email';
       return { success: false, error: errorMessage };
     }
-  };
+  }, []);
 
-  const resetPassword = async (resetData) => {
+  const resetPassword = useCallback(async (resetData) => {
     try {
       await authService.resetPassword(resetData);
       return { success: true, message: 'Password reset successfully! You can now login with your new password.' };
@@ -178,26 +171,24 @@ export const AuthProvider = ({ children }) => {
       const errorMessage = error.response?.data?.message || error.message || 'Password reset failed';
       return { success: false, error: errorMessage };
     }
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('proxask_token');
     localStorage.removeItem('proxask_user');
     dispatch({ type: 'LOGOUT' });
-  };
+  }, []);
 
   const clearError = useCallback(() => {
     dispatch({ type: 'CLEAR_ERROR' });
   }, []);
 
-  const updateUser = (userData) => {
-    const updatedUser = { ...state.user, ...userData };
-    localStorage.setItem('proxask_user', JSON.stringify(updatedUser));
+  const updateUser = useCallback((userData) => {
     dispatch({ type: 'UPDATE_USER', payload: userData });
-  };
+  }, []);
 
   // Check if user has specific role across all common backend serialization shapes
-  const hasRole = (role) => {
+  const hasRole = useCallback((role) => {
     if (!state.user) return false;
     const target = String(role || '').toUpperCase().replace(/^ROLE_/, '');
 
@@ -222,12 +213,12 @@ export const AuthProvider = ({ children }) => {
     }
 
     return false;
-  };
+  }, [state.user]);
 
   // Check if user is admin
-  const isAdmin = () => {
+  const isAdmin = useCallback(() => {
     return hasRole('ADMIN');
-  };
+  }, [hasRole]);
 
   const value = {
     ...state,

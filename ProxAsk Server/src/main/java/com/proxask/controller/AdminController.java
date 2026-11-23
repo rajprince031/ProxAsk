@@ -5,13 +5,13 @@ import com.proxask.dto.question.QuestionDTO;
 import com.proxask.dto.response.ApiResponse;
 import com.proxask.entity.User;
 import com.proxask.exception.ResourceNotFoundException;
-import com.proxask.repository.AnswerLikeRepository;
-import com.proxask.repository.AnswerRepository;
-import com.proxask.repository.QuestionRepository;
-import com.proxask.repository.UserRepository;
+import com.proxask.mapper.UserMapper;
+import com.proxask.repository.jpa.AnswerLikeRepository;
+import com.proxask.repository.jpa.UserRepository;
+import com.proxask.repository.mongo.AnswerMongoRepository;
+import com.proxask.repository.mongo.QuestionMongoRepository;
 import com.proxask.service.question.QuestionService;
 import lombok.RequiredArgsConstructor;
-import com.proxask.mapper.UserMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -25,8 +25,8 @@ import java.util.Map;
 public class AdminController {
 
     private final UserRepository userRepository;
-    private final QuestionRepository questionRepository;
-    private final AnswerRepository answerRepository;
+    private final QuestionMongoRepository questionMongoRepository;
+    private final AnswerMongoRepository answerMongoRepository;
     private final AnswerLikeRepository answerLikeRepository;
     private final QuestionService questionService;
     private final UserMapper userMapper;
@@ -44,8 +44,8 @@ public class AdminController {
         long totalUsers = userRepository.count();
         long activeUsers = userRepository.findAll().stream().filter(u -> Boolean.TRUE.equals(u.getIsActive())).count();
         long verifiedUsers = userRepository.findAll().stream().filter(u -> Boolean.TRUE.equals(u.getIsVerified())).count();
-        long totalQuestions = questionRepository.count();
-        long totalAnswers = answerRepository.count();
+        long totalQuestions = questionMongoRepository.count();
+        long totalAnswers = answerMongoRepository.count();
         long totalLikes = answerLikeRepository.count();
 
         Map<String, Object> stats = Map.of(

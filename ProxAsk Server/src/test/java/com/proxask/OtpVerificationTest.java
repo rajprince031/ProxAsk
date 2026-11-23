@@ -4,8 +4,8 @@ import com.proxask.entity.EmailVerification;
 import com.proxask.entity.User;
 import com.proxask.exception.UserAlreadyVerifiedException;
 import com.proxask.exception.VerificationException;
-import com.proxask.repository.EmailVerificationRepository;
-import com.proxask.repository.UserRepository;
+import com.proxask.repository.jpa.EmailVerificationRepository;
+import com.proxask.repository.jpa.UserRepository;
 import com.proxask.service.auth.OtpService;
 import com.proxask.service.auth.SessionService;
 import com.proxask.service.auth.VerificationService;
@@ -71,7 +71,7 @@ class OtpVerificationTest {
 
         failedAttemptsCount = 0;
 
-        userService = new UserService(userRepository, null, null, null) {
+        userService = new UserService(userRepository, null, null, null, null) {
             @Override
             public User getUserByEmail(String email) {
                 return testUser;
@@ -157,8 +157,7 @@ class OtpVerificationTest {
 
         assertThatThrownBy(() -> verificationService.verify("alex@proxask.com", rawOtp))
                 .isInstanceOf(VerificationException.class)
-                .hasMessageContaining("OTP has expired after 10 minutes")
-                .hasMessageContaining("Your unverified registration has been deleted—please sign up again");
+                .hasMessage("Your verification link/OTP has expired. Please register again.");
 
         verify(verificationSupportService).deleteUnverifiedUser(testUser);
     }
@@ -171,6 +170,48 @@ class OtpVerificationTest {
 
         assertThatThrownBy(() -> verificationService.verify("alex@proxask.com", rawOtp))
                 .isInstanceOf(UserAlreadyVerifiedException.class)
-                .hasMessageContaining("already been verified");
+                .hasMessage("Your account is already verified. Please log in.");
+    }
+
+    @Test
+    @DisplayName("Valid token verifies user and invalidates email verification token")
+    void testVerifyTokenSuccess() {
+        String token = "valid-token-123";
+        testVerification.setVerificationToken(token);
+        testVerification.setExpiryDate(LocalDateTime.now().plusHours(1));
+
+        when(emailVerificationRepository.findByVerificationToken(token)).thenReturn(Optional.of(testVerification));
+
+        verificationService.verify(token);
+
+        assertThat(testUser.isVerified()).isTrue();
+        verify(userRepository).save(testUser);
+        verify(emailVerificationRepository).delete(testVerification);
+    }
+
+    @Test
+    @DisplayName("Verifying token for already-verified user is idempotent: deletes token and returns without error")
+    void testVerifyTokenIdempotentWhenAlreadyVerified() {
+        String token = "already-verified-token-456";
+        testUser.setIsVerified(true);
+        testUser.setVerified(true);
+        testVerification.setVerificationToken(token);
+
+        when(emailVerificationRepository.findByVerificationToken(token)).thenReturn(Optional.of(testVerification));
+
+        verificationService.verify(token);
+
+        verify(emailVerificationRepository).delete(testVerification);
+        verify(userRepository, never()).save(testUser);
+    }
+
+    @Test
+    @DisplayName("Invalid or already-used token throws VerificationException")
+    void testVerifyTokenInvalidThrowsVerificationException() {
+        when(emailVerificationRepository.findByVerificationToken("non-existent-token")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> verificationService.verify("non-existent-token"))
+                .isInstanceOf(VerificationException.class)
+                .hasMessage("Your verification link/OTP has expired. Please register again.");
     }
 }

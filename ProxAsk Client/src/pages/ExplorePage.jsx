@@ -19,7 +19,6 @@ import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import EmptyState from '../components/common/EmptyState';
-import { MOCK_SUGGESTED_USERS } from '../data/mockData';
 import './ExplorePage.css';
 
 const ExplorePage = () => {
@@ -40,13 +39,10 @@ const ExplorePage = () => {
     setIsLoading(true);
     try {
       const res = await api.get('/user/suggested');
-      if (res.data && res.data.data && res.data.data.length > 0) {
-        setUsersList(res.data.data);
-      } else {
-        setUsersList(MOCK_SUGGESTED_USERS);
-      }
+      const list = res.data?.data || (Array.isArray(res.data) ? res.data : []);
+      setUsersList(list);
     } catch {
-      setUsersList(MOCK_SUGGESTED_USERS);
+      setUsersList([]);
     } finally {
       setIsLoading(false);
     }
@@ -62,25 +58,10 @@ const ExplorePage = () => {
     setIsLoading(true);
     try {
       const res = await api.get(`/user/search?q=${encodeURIComponent(query.trim())}`);
-      if (res.data && res.data.data && res.data.data.length > 0) {
-        setUsersList(res.data.data);
-      } else {
-        const q = query.toLowerCase();
-        const filtered = MOCK_SUGGESTED_USERS.filter(u =>
-          (u.username || '').toLowerCase().includes(q) ||
-          (u.firstName || '').toLowerCase().includes(q) ||
-          (u.bio || '').toLowerCase().includes(q)
-        );
-        setUsersList(filtered);
-      }
+      const list = res.data?.data || (Array.isArray(res.data) ? res.data : []);
+      setUsersList(list);
     } catch {
-      const q = query.toLowerCase();
-      const filtered = MOCK_SUGGESTED_USERS.filter(u =>
-        (u.username || '').toLowerCase().includes(q) ||
-        (u.firstName || '').toLowerCase().includes(q) ||
-        (u.bio || '').toLowerCase().includes(q)
-      );
-      setUsersList(filtered);
+      setUsersList([]);
     } finally {
       setIsLoading(false);
     }
