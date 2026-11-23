@@ -90,12 +90,7 @@ describe('SignupPage Component', () => {
         email: 'alex@example.com',
         password: 'Password123!',
       });
-      expect(mockShowSuccess).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: 'Account created successfully',
-          message: expect.stringContaining('Welcome to ProxAsk'),
-        })
-      );
+      expect(mockShowSuccess).toHaveBeenCalledWith('Verification code sent to your email');
       expect(mockShowError).not.toHaveBeenCalled();
     });
   });

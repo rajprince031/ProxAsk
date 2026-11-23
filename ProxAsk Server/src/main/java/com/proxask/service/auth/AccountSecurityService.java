@@ -32,6 +32,7 @@ public class AccountSecurityService {
     private final EmailChangeRequestRepository emailChangeRequestRepository;
     private final EmailService emailService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final SessionService sessionService;
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -49,10 +50,13 @@ public class AccountSecurityService {
                 .orElseThrow(() -> new ResourceNotFoundException("No account found with email: " + cleanEmail));
 
         int otp = generateOtp();
+        String hashedOtp = SessionService.hashToken(String.valueOf(otp));
+
         PasswordResetToken token = passwordResetTokenRepository.findByUser(user)
                 .orElse(PasswordResetToken.builder().user(user).build());
 
         token.setOtp(otp);
+        token.setHashedOtp(hashedOtp);
         token.setFailedAttempts(0);
         token.setExpiryDate(LocalDateTime.now().plusMinutes(10));
         passwordResetTokenRepository.save(token);
@@ -81,6 +85,10 @@ public class AccountSecurityService {
         user.setPassword(bCryptPasswordEncoder.encode(newPassword));
         userRepository.save(user);
         passwordResetTokenRepository.delete(token);
+
+        // Security requirement: invalidate all existing active sessions when password is reset
+        sessionService.revokeAllSessionsForUser(user);
+        log.info("Password reset successfully and all active sessions revoked for user {}", user.getUsername());
     }
 
     @Transactional
@@ -91,10 +99,13 @@ public class AccountSecurityService {
         }
 
         int otp = generateOtp();
+        String hashedOtp = SessionService.hashToken(String.valueOf(otp));
+
         PasswordResetToken token = passwordResetTokenRepository.findByUser(currentUser)
                 .orElse(PasswordResetToken.builder().user(currentUser).build());
 
         token.setOtp(otp);
+        token.setHashedOtp(hashedOtp);
         token.setFailedAttempts(0);
         token.setExpiryDate(LocalDateTime.now().plusMinutes(10));
         passwordResetTokenRepository.save(token);
@@ -120,6 +131,10 @@ public class AccountSecurityService {
         currentUser.setPassword(bCryptPasswordEncoder.encode(newPassword));
         userRepository.save(currentUser);
         passwordResetTokenRepository.delete(token);
+
+        // Security requirement: invalidate all other active sessions when password is changed
+        sessionService.revokeAllSessionsForUser(currentUser);
+        log.info("Password changed successfully and all active sessions revoked for user {}", currentUser.getUsername());
     }
 
     @Transactional
@@ -153,7 +168,6 @@ public class AccountSecurityService {
         request.setExpiryDate(LocalDateTime.now().plusMinutes(10));
         emailChangeRequestRepository.save(request);
 
-        // Send OTP directly to NEW email address
         emailService.sendEmailChangeVerificationEmail(cleanNewEmail, currentUser.getFirstName(), otp);
     }
 
@@ -203,7 +217,14 @@ public class AccountSecurityService {
             throw new VerificationException("Maximum attempts exceeded. Please request a new reset code.");
         }
 
-        if (token.getOtp() != otp) {
+        boolean matches = false;
+        if (token.getHashedOtp() != null) {
+            matches = token.getHashedOtp().equals(SessionService.hashToken(String.valueOf(otp)));
+        } else {
+            matches = (token.getOtp() == otp);
+        }
+
+        if (!matches) {
             token.setFailedAttempts(token.getFailedAttempts() + 1);
             passwordResetTokenRepository.save(token);
             throw new VerificationException("The reset code you entered is incorrect.");

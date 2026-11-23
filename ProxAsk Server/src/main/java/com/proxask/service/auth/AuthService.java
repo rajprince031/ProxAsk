@@ -6,18 +6,21 @@ import com.proxask.dto.auth.LoginRequest;
 import com.proxask.dto.auth.RegisterRequest;
 import com.proxask.entity.User;
 import com.proxask.exception.VerificationException;
+import com.proxask.mapper.UserMapper;
 import com.proxask.repository.UserRepository;
-import com.proxask.service.jwt.JWTService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.proxask.mapper.UserMapper;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -27,16 +30,17 @@ public class AuthService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final JWTService jwtService;
     private final UserMapper userMapper;
     private final OtpService otpService;
     private final VerificationSupportService verificationSupportService;
+    private final SessionService sessionService;
 
     @Transactional
     public UserDTO registerUser(RegisterRequest registerRequest) {
         String email = registerRequest.getEmail() != null ? registerRequest.getEmail().trim().toLowerCase() : null;
         String username = registerRequest.getUsername() != null ? registerRequest.getUsername().trim().toLowerCase() : null;
 
+        // Duplicate check & 10-minute unverified TTL check
         verificationSupportService.cleanupUnverifiedConflicts(email, username);
 
         User user = new User();
@@ -48,10 +52,12 @@ public class AuthService {
         user.setBio(registerRequest.getBio());
         user.setAvatar(registerRequest.getAvatar());
         user.setIsActive(true);
+        user.setVerified(false);
         user.setIsVerified(false);
+        user.setOtpAttempts(0);
+        user.setOtpExpiry(Instant.now().plus(10, ChronoUnit.MINUTES));
 
         User newUser = userRepository.save(user);
-        UserDTO userDTO = userMapper.toDTO(newUser);
 
         try {
             otpService.sendOtp(newUser);
@@ -59,10 +65,12 @@ public class AuthService {
             log.warn("OTP dispatch failed during registration for {}: {}", email, e.getMessage());
         }
 
+        UserDTO userDTO = userMapper.toDTO(newUser);
+        userDTO.setRequiresVerification(true);
         return userDTO;
     }
 
-    public ResponseEntity<AuthResponse> loginUser(LoginRequest loginRequest) {
+    public SessionService.SessionTokens loginUser(LoginRequest loginRequest, HttpServletRequest request) {
         String identifier = loginRequest.getUsername();
         if (identifier == null || identifier.trim().isEmpty()) {
             identifier = loginRequest.getEmail();
@@ -75,12 +83,24 @@ public class AuthService {
         final String searchIdentifier = identifier.trim();
 
         // Resolve user to ensure email verification before completing login
-        User user = userRepository.findByUsername(searchIdentifier)
-                .or(() -> userRepository.findByEmail(searchIdentifier))
+        User user = userRepository.findByUsername(searchIdentifier.toLowerCase())
+                .or(() -> userRepository.findByEmail(searchIdentifier.toLowerCase()))
                 .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));
 
-        if (!Boolean.TRUE.equals(user.getIsVerified())) {
-            throw new VerificationException("Account is not verified. Please verify your email OTP before logging in.");
+        if (!user.isVerified()) {
+            boolean isExpired = false;
+            if (user.getOtpExpiry() != null && Instant.now().isAfter(user.getOtpExpiry())) {
+                isExpired = true;
+            } else if (user.getCreatedAt() != null && user.getCreatedAt().isBefore(LocalDateTime.now().minusMinutes(10))) {
+                isExpired = true;
+            }
+
+            if (isExpired) {
+                verificationSupportService.deleteUnverifiedUser(user);
+                throw new VerificationException("Registration has expired after 10 minutes. Your unverified registration has been deleted—please sign up again.");
+            }
+
+            throw new VerificationException("Email not verified");
         }
 
         Authentication authentication = authenticationManager.authenticate(
@@ -88,19 +108,9 @@ public class AuthService {
         );
 
         if (!authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).body(new AuthResponse());
+            throw new IllegalArgumentException("Invalid username or password");
         }
 
-        String token = jwtService.generateToken(user.getUsername());
-        UserDTO userDTO = userMapper.toDTO(user);
-
-        AuthResponse authResponse = AuthResponse.builder()
-                .authToken(token)
-                .token(token)
-                .username(user.getUsername())
-                .user(userDTO)
-                .build();
-
-        return ResponseEntity.ok(authResponse);
+        return sessionService.createSession(user, request);
     }
 }

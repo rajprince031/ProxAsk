@@ -23,6 +23,9 @@ public class PasswordResetToken {
     @Column(nullable = false)
     private int otp;
 
+    @Column(length = 128)
+    private String hashedOtp;
+
     @Builder.Default
     private int failedAttempts = 0;
 

@@ -88,6 +88,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(409).body(new ErrorResponse(ex.getMessage(), 409));
     }
 
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFoundException(org.springframework.web.servlet.resource.NoResourceFoundException ex) {
+        return ResponseEntity.status(404).body(new ErrorResponse("Resource not found: " + ex.getResourcePath(), 404));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
         log.error("Unhandled exception: ", ex);

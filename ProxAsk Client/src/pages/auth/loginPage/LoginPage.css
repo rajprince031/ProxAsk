@@ -16,6 +16,13 @@
   overflow-x: hidden;
 }
 
+.px-auth::before,
+.px-auth::after,
+.px-auth__container::before,
+.px-auth__container::after {
+  pointer-events: none;
+}
+
 /* Top bar with Brand & Theme Toggle */
 .px-auth__topbar {
   display: flex;
@@ -25,6 +32,8 @@
   max-width: 1000px;
   margin: 0 auto;
   padding: 12px 0 20px;
+  position: relative;
+  z-index: 5;
 }
 
 .px-auth__topbar-left {
@@ -61,6 +70,9 @@
   color: var(--text-primary);
   font-weight: 700;
   font-size: 1.15rem;
+  position: relative;
+  z-index: 5;
+  cursor: pointer;
 }
 
 .px-auth__brand-badge {
@@ -292,6 +304,8 @@
   padding-top: var(--space-md);
   border-top: 1px solid var(--border-color);
   text-align: center;
+  position: relative;
+  z-index: 5;
 }
 
 .px-auth__footer-text {
@@ -303,6 +317,9 @@
   color: var(--brand-primary);
   font-weight: 600;
   text-decoration: none;
+  position: relative;
+  z-index: 5;
+  cursor: pointer;
 }
 
 .px-auth__footer-link:hover {

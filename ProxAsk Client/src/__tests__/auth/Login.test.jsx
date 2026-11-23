@@ -30,12 +30,12 @@ describe('LoginPage Component', () => {
     vi.clearAllMocks();
   });
 
-  it('renders login fields, submit button, and quick-login test accounts', () => {
+  it('renders login fields, submit button, and signup link', () => {
     renderLogin();
-    expect(screen.getByPlaceholderText(/e\.g\. demo_user or admin/i)).toBeDefined();
+    expect(screen.getByPlaceholderText(/alex_creator|demo_user/i)).toBeDefined();
     expect(screen.getByPlaceholderText(/••••••••/i)).toBeDefined();
     expect(screen.getByRole('button', { name: /sign in/i })).toBeDefined();
-    expect(screen.getByText(/TEST ACCOUNTS/i)).toBeDefined();
+    expect(screen.getByRole('link', { name: /create one now/i })).toBeDefined();
   });
 
   it('shows validation errors when submitted empty', async () => {
@@ -50,11 +50,11 @@ describe('LoginPage Component', () => {
   });
 
   it('calls login API with credentials on submit', async () => {
-    mockLogin.mockResolvedValueOnce({ success: true, user: { username: 'demo_user' } });
+    mockLogin.mockResolvedValueOnce({ success: true, user: { username: 'alex_creator' } });
     renderLogin();
 
-    fireEvent.change(screen.getByPlaceholderText(/e\.g\. demo_user or admin/i), {
-      target: { value: 'demo_user' }
+    fireEvent.change(screen.getByPlaceholderText(/alex_creator|demo_user/i), {
+      target: { value: 'alex_creator' }
     });
     fireEvent.change(screen.getByPlaceholderText(/••••••••/i), {
       target: { value: 'password123' }
@@ -64,27 +64,23 @@ describe('LoginPage Component', () => {
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({
-        username: 'demo_user',
+        username: 'alex_creator',
         password: 'password123'
       });
       expect(mockShowSuccess).toHaveBeenCalledWith(expect.stringContaining('Welcome back'));
     });
   });
 
-  it('allows 1-click test login using test account pill', async () => {
-    mockLogin.mockResolvedValueOnce({ success: true, user: { username: 'demo_user' } });
+  it('toggles password visibility', () => {
     renderLogin();
+    const pwdInput = screen.getByPlaceholderText(/••••••••/i);
+    expect(pwdInput.getAttribute('type')).toBe('password');
 
-    const demoPill = screen.getByTitle(/click to login as @demo_user/i);
-    expect(demoPill).toBeDefined();
-    fireEvent.click(demoPill);
+    const toggleBtn = screen.getByLabelText(/show password/i);
+    fireEvent.click(toggleBtn);
+    expect(pwdInput.getAttribute('type')).toBe('text');
 
-    await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith({
-        username: 'demo_user',
-        email: 'demo@proxask.com',
-        password: 'password123'
-      });
-    });
+    fireEvent.click(screen.getByLabelText(/hide password/i));
+    expect(pwdInput.getAttribute('type')).toBe('password');
   });
 });

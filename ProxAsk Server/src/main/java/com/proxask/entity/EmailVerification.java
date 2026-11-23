@@ -1,6 +1,5 @@
 package com.proxask.entity;
 
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +20,8 @@ public class EmailVerification {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     private int otp;
+    @Column(length = 128)
+    private String hashedOtp;
     private String verificationToken;
     @Builder.Default
     private int failedAttempts = 0;

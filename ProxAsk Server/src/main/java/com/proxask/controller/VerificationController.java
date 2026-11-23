@@ -15,16 +15,16 @@ public class VerificationController {
 
     private final VerificationService verificationService;
 
-    @PostMapping({"/verify", "/api/verify", "/auth/verify", "/api/auth/verify"})
+    @PostMapping({"/verify", "/api/verify", "/auth/verify", "/api/auth/verify", "/auth/verify-email", "/api/auth/verify-email"})
     public ResponseEntity<ApiResponse<Void>> verifyOtpRequest(@RequestBody OtpRequest otpRequest) {
         verificationService.verify(otpRequest.getEmail(), otpRequest.getOtp());
-        return ResponseEntity.ok(new ApiResponse<>(true, "Email verified successfully! You can now sign in.", null));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Account verified and created successfully!", null));
     }
 
-    @GetMapping({"/verify", "/api/verify", "/auth/verify", "/api/auth/verify"})
+    @GetMapping({"/verify", "/api/verify", "/auth/verify", "/api/auth/verify", "/auth/verify-email", "/api/auth/verify-email"})
     public ResponseEntity<ApiResponse<Void>> verifyTokenRequest(@RequestParam String token) {
         verificationService.verify(token);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Token verified successfully! You can now sign in.", null));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Account verified and created successfully!", null));
     }
 
     @PostMapping({"/verify/resend-otp", "/api/verify/resend-otp", "/auth/resend-verification", "/api/auth/resend-verification"})

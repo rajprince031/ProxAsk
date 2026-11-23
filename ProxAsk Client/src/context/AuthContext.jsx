@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { authService } from '../service/AuthService';
 
 export const AuthContext = createContext();
@@ -117,13 +117,18 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       dispatch({ type: 'AUTH_START' });
-      await authService.register(userData);
+      const response = await authService.register(userData);
       
       // Don't automatically log in after registration
       // User needs to verify email first
       dispatch({ type: 'AUTH_FAILURE', payload: null });
       
-      return { success: true, message: 'Registration successful! Please check your email to verify your account.' };
+      return { 
+        success: true, 
+        message: 'Verification code sent to your email', 
+        requiresVerification: true,
+        data: response 
+      };
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || 'Registration failed';
       dispatch({
@@ -137,10 +142,14 @@ export const AuthProvider = ({ children }) => {
   const verifyEmail = async (verificationData) => {
     try {
       dispatch({ type: 'AUTH_START' });
-      await authService.verifyEmail(verificationData);
+      const response = await authService.verifyEmail(verificationData);
       
       dispatch({ type: 'AUTH_FAILURE', payload: null });
-      return { success: true, message: 'Email verified successfully! You can now login to your account.' };
+      return { 
+        success: true, 
+        message: response?.message || 'Account verified and created successfully!',
+        data: response
+      };
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || 'Email verification failed';
       dispatch({
@@ -177,9 +186,9 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: 'LOGOUT' });
   };
 
-  const clearError = () => {
+  const clearError = useCallback(() => {
     dispatch({ type: 'CLEAR_ERROR' });
-  };
+  }, []);
 
   const updateUser = (userData) => {
     const updatedUser = { ...state.user, ...userData };

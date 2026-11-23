@@ -44,13 +44,14 @@ const EmailVerificationPage = () => {
         try {
           const res = await verifyEmail({ token: tokenFromUrl });
           if (res.success) {
-            showSuccess('Email verified successfully! You can now sign in.');
+            showSuccess('Account verified and created successfully!');
             navigate('/login');
           } else {
             showError(res.error || 'Verification link is invalid or expired.');
           }
-        } catch (_err) {
-          showError('Verification failed. Please enter your email and OTP below.');
+        } catch (err) {
+          const errMsg = err.response?.data?.message || err.message || 'Verification failed. Please enter your email and OTP below.';
+          showError(errMsg);
         } finally {
           setIsSubmitting(false);
         }
@@ -74,7 +75,7 @@ const EmailVerificationPage = () => {
       return;
     }
     if (!otp.trim() || otp.trim().length !== 6) {
-      showError('Please enter the 6-digit OTP code (or click Use Test Code 123456).');
+      showError('Please enter the 6-digit verification code.');
       return;
     }
 
@@ -82,22 +83,16 @@ const EmailVerificationPage = () => {
     try {
       const res = await verifyEmail({ email: email.trim(), otp: otp.trim() });
       if (res.success) {
-        showSuccess('Email verified successfully! You can now sign in.');
+        showSuccess('Account verified and created successfully!');
         navigate('/login');
       } else {
         showError(res.error || 'Invalid or expired OTP. Please try again.');
       }
-    } catch (_err) {
-      showError('Verification failed. Please double check the code.');
+    } catch (err) {
+      const errMsg = err.response?.data?.message || err.message || 'Verification failed. Please double check the code.';
+      showError(errMsg);
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleQuickFillTestOtp = () => {
-    setOtp('123456');
-    if (!email.trim()) {
-      setEmail('demo@proxask.com');
     }
   };
 
@@ -112,7 +107,7 @@ const EmailVerificationPage = () => {
       if (resendVerificationEmail) {
         await resendVerificationEmail(email.trim());
       }
-      showSuccess('A fresh 6-digit verification code has been generated (Use OTP 123456 in test mode)!');
+      showSuccess('A fresh 6-digit verification code has been dispatched to your email.');
       setResendCooldown(60);
     } catch (err) {
       showError(err.response?.data?.message || 'Failed to resend verification OTP.');
@@ -155,31 +150,6 @@ const EmailVerificationPage = () => {
             </p>
           </div>
 
-          {/* Test Mode Helper Banner */}
-          <div className="px-auth__alert px-auth__alert--info">
-            <CheckCircle2 size={16} className="px-auth__alert-icon" />
-            <div className="px-auth__alert-text">
-              <strong>Testing Mode Active:</strong> Since email delivery is disabled, you can click below to pre-fill test OTP <code>123456</code>.
-              <div style={{ marginTop: '6px' }}>
-                <button
-                  type="button"
-                  onClick={handleQuickFillTestOtp}
-                  style={{
-                    padding: '4px 8px',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    background: 'var(--brand-teal, #0F766E)',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Quick Fill Test Code (123456)
-                </button>
-              </div>
-            </div>
-          </div>
 
           <form onSubmit={handleVerifyOtp} className="px-auth__form">
             {/* Email Address */}

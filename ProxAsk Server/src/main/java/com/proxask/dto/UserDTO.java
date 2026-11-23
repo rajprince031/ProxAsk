@@ -24,6 +24,8 @@ public class UserDTO {
     private String website;
     private Boolean isActive;
     private Boolean isVerified;
+    private Boolean verified;
+    private Boolean requiresVerification;
     private Boolean isPrivate;
     private Role role;
     private Long followersCount;

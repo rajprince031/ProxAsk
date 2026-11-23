@@ -2,19 +2,25 @@ package com.proxask.service.auth;
 
 import com.proxask.entity.EmailVerification;
 import com.proxask.entity.User;
+import com.proxask.exception.ResourceNotFoundException;
 import com.proxask.exception.UserAlreadyVerifiedException;
 import com.proxask.exception.VerificationException;
 import com.proxask.repository.EmailVerificationRepository;
 import com.proxask.repository.UserRepository;
 import com.proxask.service.user.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class VerificationService {
 
     private final EmailVerificationRepository emailVerificationRepository;
@@ -35,28 +41,93 @@ public class VerificationService {
     }
 
     public void isAccountVerified(User user) {
-        if (Boolean.TRUE.equals(user.getIsVerified())) {
+        if (user.isVerified()) {
             throw new UserAlreadyVerifiedException("This account has already been verified.");
         }
     }
 
     @Transactional
     public void verify(String email, int otp) {
-        User user = userService.getUserByEmail(email);
-        isAccountVerified(user);
-
-        EmailVerification emailVerification = getEmailVerification(user);
-        isTokenExpired(emailVerification);
-        verificationSupportService.isMaxAttemptsExceeded(emailVerification);
-
-        if (emailVerification.getOtp() != otp) {
-            verificationSupportService.incrementFailedAttempts(emailVerification);
-            throw new VerificationException("The OTP you entered is incorrect.");
+        String cleanEmail = email != null ? email.trim().toLowerCase() : "";
+        User user = userRepository.findByEmail(cleanEmail).orElse(null);
+        if (user == null) {
+            try {
+                user = userService.getUserByEmail(cleanEmail);
+            } catch (Exception ignored) {}
+        }
+        if (user == null) {
+            throw new ResourceNotFoundException("Registration not found or expired. Please sign up again.");
         }
 
+        isAccountVerified(user);
+
+        // 1. Check 10-minute expiry first
+        boolean isExpired = false;
+        Instant now = Instant.now();
+        if (user.getOtpExpiry() != null && now.isAfter(user.getOtpExpiry())) {
+            isExpired = true;
+        } else if (user.getCreatedAt() != null && user.getCreatedAt().isBefore(LocalDateTime.now().minusMinutes(10))) {
+            isExpired = true;
+        }
+
+        Optional<EmailVerification> evOpt = emailVerificationRepository.findByUser(user);
+        if (!isExpired && evOpt.isPresent()) {
+            EmailVerification ev = evOpt.get();
+            if (ev.getExpiryDate() != null && ev.getExpiryDate().isBefore(LocalDateTime.now())) {
+                isExpired = true;
+            }
+        }
+
+        if (isExpired) {
+            verificationSupportService.deleteUnverifiedUser(user);
+            throw new VerificationException("OTP has expired after 10 minutes. Your unverified registration has been deleted—please sign up again.");
+        }
+
+        // 2. Validate OTP
+        boolean matches = false;
+        String rawOtpStr = String.valueOf(otp);
+        String hashedOtpStr = SessionService.hashToken(rawOtpStr);
+
+        if (user.getOtpCode() != null) {
+            matches = user.getOtpCode().equals(rawOtpStr) || user.getOtpCode().equals(hashedOtpStr);
+        }
+
+        if (!matches && evOpt.isPresent()) {
+            EmailVerification ev = evOpt.get();
+            if (ev.getHashedOtp() != null && ev.getHashedOtp().equals(hashedOtpStr)) {
+                matches = true;
+            } else if (ev.getOtp() == otp) {
+                matches = true;
+            }
+        }
+
+        if (!matches) {
+            int attempts = user.getOtpAttempts() + 1;
+            user.setOtpAttempts(attempts);
+            if (evOpt.isPresent()) {
+                EmailVerification ev = evOpt.get();
+                ev.setFailedAttempts(attempts);
+                emailVerificationRepository.save(ev);
+            }
+
+            if (attempts >= 3) {
+                verificationSupportService.deleteUnverifiedUser(user);
+                throw new VerificationException("Maximum 3 OTP attempts exceeded. Your unverified registration has been deleted—please sign up again.");
+            } else {
+                userRepository.save(user);
+                int remaining = 3 - attempts;
+                throw new VerificationException("Invalid OTP. " + remaining + " attempt(s) remaining.");
+            }
+        }
+
+        user.setVerified(true);
         user.setIsVerified(true);
+        user.setOtpCode(null);
+        user.setOtpExpiry(null);
+        user.setOtpAttempts(0);
         userRepository.save(user);
-        emailVerificationRepository.delete(emailVerification);
+        evOpt.ifPresent(emailVerificationRepository::delete);
+        log.info("User {} ({}) successfully verified email via OTP", user.getUsername(), user.getEmail());
     }
 
     public EmailVerification findEmailVerificationByToken(String token) {
@@ -71,24 +142,54 @@ public class VerificationService {
         verificationSupportService.isMaxAttemptsExceeded(emailVerification);
 
         User user = emailVerification.getUser();
+        user.setVerified(true);
         user.setIsVerified(true);
+        user.setOtpCode(null);
+        user.setOtpExpiry(null);
+        user.setOtpAttempts(0);
         userRepository.save(user);
         emailVerificationRepository.delete(emailVerification);
+        log.info("User {} ({}) successfully verified email via token link", user.getUsername(), user.getEmail());
     }
 
+    @Transactional
     public void resendOtp(String email) {
-        User user = userService.getUserByEmail(email);
+        String cleanEmail = email != null ? email.trim().toLowerCase() : "";
+        User user = userRepository.findByEmail(cleanEmail).orElse(null);
+        if (user == null) {
+            try {
+                user = userService.getUserByEmail(cleanEmail);
+            } catch (Exception ignored) {}
+        }
+        if (user == null) {
+            throw new ResourceNotFoundException("Registration not found or expired. Please sign up again.");
+        }
+
         isAccountVerified(user);
 
+        // Check if registration already expired
+        if (user.getOtpExpiry() != null && Instant.now().isAfter(user.getOtpExpiry())) {
+            verificationSupportService.deleteUnverifiedUser(user);
+            throw new VerificationException("Registration has expired after 10 minutes. Your unverified registration has been deleted—please sign up again.");
+        }
+
+        // Rate limit: must wait at least 60 seconds after issuance before resending
+        if (user.getOtpExpiry() != null) {
+            Instant earliestAllowed = user.getOtpExpiry().minus(9, ChronoUnit.MINUTES);
+            if (Instant.now().isBefore(earliestAllowed)) {
+                throw new VerificationException("Please wait 60 seconds before requesting a new OTP.");
+            }
+        }
+
         emailVerificationRepository.findByUser(user).ifPresent(emailVerification -> {
-            // Rate limit: must wait at least 2 minutes after issuance before resending
-            // expiryDate is set to now + 10 mins; minus 8 mins = creation time + 2 mins
-            if (emailVerification.getExpiryDate().minusMinutes(8).isAfter(LocalDateTime.now())) {
-                throw new VerificationException("Please wait 120 seconds before requesting a new OTP.");
+            if (emailVerification.getExpiryDate() != null && emailVerification.getExpiryDate().minusMinutes(9).isAfter(LocalDateTime.now())) {
+                throw new VerificationException("Please wait 60 seconds before requesting a new OTP.");
             }
             verificationSupportService.deleteEmailVerification(emailVerification);
         });
 
-        otpService.sendOtp(user);
+        if (otpService != null) {
+            otpService.sendOtp(user);
+        }
     }
 }

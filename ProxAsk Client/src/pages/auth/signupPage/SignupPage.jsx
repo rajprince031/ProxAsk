@@ -59,16 +59,6 @@ const SignupPage = () => {
   const { showSuccess, showError } = useNotifications();
   const { isDark, toggleTheme } = useTheme();
 
-  // Gracefully fallback to '/' if browser back is pressed with no prior in-app history
-  useEffect(() => {
-    const handlePopState = (e) => {
-      if (!e.state || (typeof e.state.idx === 'number' && e.state.idx <= 0)) {
-        // Safe check
-      }
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [navigate]);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -187,12 +177,10 @@ const SignupPage = () => {
       const result = await register(payload);
 
       if (result && result.success) {
-        showSuccess({
-          title: 'Account created successfully',
-          message: 'Welcome to ProxAsk! Your account has been created. Please enter the verification code sent to your email.'
-        });
+        showSuccess('Verification code sent to your email');
         navigate('/verify-email', { 
-          state: { email: formData.email.trim().toLowerCase() } 
+          state: { email: formData.email.trim().toLowerCase() },
+          replace: true
         });
       } else {
         const errorMsg = formatRegistrationError(result?.error);

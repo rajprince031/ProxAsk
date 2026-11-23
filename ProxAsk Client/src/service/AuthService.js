@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { TEST_ACCOUNTS, findTestAccount } from '../data/mockData';
 
 const getApiBaseUrl = () => {
   if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) {
@@ -10,13 +9,14 @@ const getApiBaseUrl = () => {
 
 const API_BASE_URL = getApiBaseUrl();
 
-// Create axios instance
+// Create axios instance with credentials support
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 8000,
+  withCredentials: true,
+  timeout: 10000,
 });
 
 // Add request interceptor to include auth token
@@ -31,114 +31,118 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Add response interceptor for error handling
+// Response interceptor for automatic refresh token rotation
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    const token = localStorage.getItem('proxask_token');
-    // If using a demo/mock token, do not force-kick to /login on backend errors
-    if (token && token.startsWith('mock_jwt_')) {
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Do not attempt refresh on auth endpoints (login, refresh-token, register) or if already retried
+    if (
+      !error.response ||
+      error.response.status !== 401 ||
+      !originalRequest ||
+      originalRequest._retry ||
+      (originalRequest.url && (
+        originalRequest.url.includes('/auth/login') ||
+        originalRequest.url.includes('/auth/refresh-token') ||
+        originalRequest.url.includes('/auth/register')
+      ))
+    ) {
       return Promise.reject(error);
     }
 
-    if (error.response?.status === 401 && !window.location.pathname.includes('/login')) {
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject });
+      })
+        .then((token) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return api(originalRequest);
+        })
+        .catch((err) => Promise.reject(err));
+    }
+
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    try {
+      const refreshRes = await axios.post(
+        `${API_BASE_URL}/auth/refresh-token`,
+        {},
+        { withCredentials: true }
+      );
+
+      const newToken = refreshRes.data?.authToken || refreshRes.data?.token;
+      if (newToken) {
+        localStorage.setItem('proxask_token', newToken);
+        if (refreshRes.data.user) {
+          localStorage.setItem('proxask_user', JSON.stringify(refreshRes.data.user));
+        }
+        api.defaults.headers.common.Authorization = `Bearer ${newToken}`;
+        processQueue(null, newToken);
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return api(originalRequest);
+      } else {
+        throw new Error('No new token returned');
+      }
+    } catch (refreshErr) {
+      processQueue(refreshErr, null);
       localStorage.removeItem('proxask_token');
       localStorage.removeItem('proxask_user');
-      window.location.href = '/login';
+      return Promise.reject(refreshErr);
+    } finally {
+      isRefreshing = false;
     }
-    return Promise.reject(error);
   }
 );
 
 export const authService = {
-  // User login (supports real backend + hardcoded test accounts)
+  // User login
   async login(credentials) {
-    const identifier = (credentials.username || credentials.email || '').trim().toLowerCase();
-
-    // 1. Check if identifier matches a hardcoded test account
-    const testAcc = findTestAccount(identifier);
-    if (testAcc) {
-      const token = `mock_jwt_${testAcc.key}_session`;
-      const user = testAcc.user;
-      return {
-        token,
-        authToken: token,
-        username: user.username,
-        user,
-        success: true,
-      };
-    }
-
-    // 2. Attempt real backend authentication
-    try {
-      const payload = {
-        username: credentials.username || credentials.email,
-        email: credentials.email,
-        password: credentials.password,
-      };
-      const response = await api.post('/auth/login', payload);
-      const data = response.data;
-      const token = data.token || data.authToken;
-      const user = data.user || { username: data.username };
-      return { token, user, ...data };
-    } catch (err) {
-      // If backend is offline and user entered 'demo' or 'admin', fallback gracefully
-      if (!err.response && (identifier.includes('demo') || identifier.includes('admin'))) {
-        const fallbackAcc = TEST_ACCOUNTS.find(a => identifier.includes(a.key)) || TEST_ACCOUNTS[0];
-        const token = `mock_jwt_${fallbackAcc.key}_session`;
-        return {
-          token,
-          authToken: token,
-          username: fallbackAcc.user.username,
-          user: fallbackAcc.user,
-          success: true,
-        };
-      }
-      throw err;
-    }
+    const payload = {
+      username: (credentials.username || credentials.email || '').trim().toLowerCase(),
+      email: credentials.email ? credentials.email.trim().toLowerCase() : undefined,
+      password: credentials.password,
+    };
+    const response = await api.post('/auth/login', payload);
+    const data = response.data;
+    const token = data.token || data.authToken;
+    const user = data.user || { username: data.username };
+    return { token, user, ...data };
   },
 
   // User registration
   async register(userData) {
-    try {
-      const payload = {
-        firstName: userData.firstname || userData.firstName,
-        lastName: userData.lastname || userData.lastName,
-        username: userData.username,
-        email: userData.email,
-        password: userData.password,
-        bio: userData.bio || '',
-        avatar: userData.avatar || '',
-      };
-      const response = await api.post('/auth/register', payload);
-      return response.data;
-    } catch (err) {
-      // If backend email/DB is offline, simulate successful test registration
-      if (!err.response) {
-        return {
-          success: true,
-          message: 'Account registered in offline test mode! Use OTP 123456 to verify.',
-          data: {
-            username: userData.username,
-            email: userData.email,
-          },
-        };
-      }
-      throw err;
-    }
+    const payload = {
+      firstName: userData.firstname || userData.firstName,
+      lastName: userData.lastname || userData.lastName,
+      username: (userData.username || '').trim().toLowerCase(),
+      email: (userData.email || '').trim().toLowerCase(),
+      password: userData.password,
+      bio: userData.bio || '',
+      avatar: userData.avatar || '',
+    };
+    const response = await api.post('/auth/register', payload);
+    return response.data;
   },
 
-  // Email verification (supports OTP, token link, or test code 123456)
+  // Email verification (supports OTP or token link)
   async verifyEmail(verificationData) {
-    // Test code bypass when email service is offline
-    const otpValue = verificationData?.otp ? String(verificationData.otp).trim() : '';
-    if (otpValue === '123456' || otpValue === '000000') {
-      return {
-        success: true,
-        message: 'Email verified successfully with master test code!',
-      };
-    }
-
     if (typeof verificationData === 'string') {
       const response = await api.get(`/auth/verify?token=${encodeURIComponent(verificationData)}`);
       return response.data;
@@ -148,84 +152,43 @@ export const authService = {
       return response.data;
     }
 
-    try {
-      const payload = {
-        email: verificationData.email,
-        otp: parseInt(verificationData.otp, 10),
-      };
-      const response = await api.post('/auth/verify', payload);
-      return response.data;
-    } catch (err) {
-      // Allow fallback if backend is offline
-      if (!err.response) {
-        return {
-          success: true,
-          message: 'Email verified successfully in test mode!',
-        };
-      }
-      throw err;
-    }
+    const payload = {
+      email: (verificationData.email || '').trim().toLowerCase(),
+      otp: parseInt(verificationData.otp, 10),
+    };
+    const response = await api.post('/auth/verify', payload);
+    return response.data;
   },
 
   // Resend verification email
   async resendVerificationEmail(email) {
-    try {
-      const response = await api.post('/auth/resend-verification', { email });
-      return response.data;
-    } catch (err) {
-      if (!err.response) {
-        return {
-          success: true,
-          message: 'Test verification code generated! Use OTP 123456.',
-        };
-      }
-      throw err;
-    }
+    const response = await api.post('/auth/resend-verification', {
+      email: (email || '').trim().toLowerCase(),
+    });
+    return response.data;
   },
 
   // Forgot password
   async forgotPassword(email) {
-    try {
-      const response = await api.post('/auth/forgot-password', { email });
-      return response.data;
-    } catch {
-      return {
-        success: true,
-        message: 'Password reset code generated for test mode: 123456',
-      };
-    }
+    const response = await api.post('/auth/forgot-password', {
+      email: (email || '').trim().toLowerCase(),
+    });
+    return response.data;
   },
 
   // Reset password
   async resetPassword(resetData) {
-    try {
-      const response = await api.post('/auth/reset-password', resetData);
-      return response.data;
-    } catch {
-      return {
-        success: true,
-        message: 'Password updated successfully in test mode!',
-      };
-    }
+    const payload = {
+      email: (resetData.email || '').trim().toLowerCase(),
+      otp: parseInt(resetData.otp, 10),
+      newPassword: resetData.newPassword,
+    };
+    const response = await api.post('/auth/reset-password', payload);
+    return response.data;
   },
 
   // Validate token and get user info
   async validateToken(token) {
-    if (token && token.startsWith('mock_jwt_')) {
-      const cached = localStorage.getItem('proxask_user');
-      if (cached) {
-        try {
-          return JSON.parse(cached);
-        } catch {
-          // fallback
-        }
-      }
-      // Match key from token
-      const match = TEST_ACCOUNTS.find(a => token.includes(a.key));
-      if (match) return match.user;
-      return TEST_ACCOUNTS[0].user;
-    }
-
     const response = await api.get('/auth/validate', {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -236,7 +199,7 @@ export const authService = {
 
   // Refresh token
   async refreshToken() {
-    const response = await api.post('/auth/refresh');
+    const response = await api.post('/auth/refresh-token', {}, { withCredentials: true });
     return response.data;
   },
 
@@ -250,6 +213,22 @@ export const authService = {
       localStorage.removeItem('proxask_token');
       localStorage.removeItem('proxask_user');
     }
+  },
+
+  // Active Sessions
+  async getActiveSessions() {
+    const response = await api.get('/auth/sessions');
+    return response.data?.data || response.data || [];
+  },
+
+  async revokeSession(sessionId) {
+    const response = await api.delete(`/auth/sessions/${sessionId}`);
+    return response.data;
+  },
+
+  async revokeOtherSessions() {
+    const response = await api.delete('/auth/sessions/other');
+    return response.data;
   },
 };
 

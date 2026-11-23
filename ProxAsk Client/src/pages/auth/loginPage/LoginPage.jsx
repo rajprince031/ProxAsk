@@ -9,10 +9,7 @@ import {
   Sparkles,
   Sun,
   Moon,
-  AlertCircle,
-  UserCheck,
-  ShieldCheck,
-  Star
+  AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useNotifications } from '../../../context/NotificationContext';
@@ -20,7 +17,6 @@ import { useTheme } from '../../../context/ThemeContext';
 import Button from '../../../components/common/Button';
 import Badge from '../../../components/common/Badge';
 import Card from '../../../components/common/Card';
-import { TEST_ACCOUNTS } from '../../../data/mockData';
 import './LoginPage.css';
 
 const LoginPage = () => {
@@ -43,17 +39,6 @@ const LoginPage = () => {
     if (clearError) clearError();
   }, [clearError]);
 
-  // Gracefully fallback to '/' if browser back is pressed with no prior in-app history
-  useEffect(() => {
-    const handlePopState = (e) => {
-      if (!e.state || (typeof e.state.idx === 'number' && e.state.idx <= 0)) {
-        // Safe check to avoid leaving app into blank state
-      }
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [navigate]);
-
   const validate = () => {
     const errors = {};
     if (!identifier.trim()) {
@@ -70,29 +55,6 @@ const LoginPage = () => {
     return errors;
   };
 
-  const executeLogin = async (payload) => {
-    setIsSubmitting(true);
-    setServerError('');
-    try {
-      const result = await login(payload);
-
-      if (result.success) {
-        showSuccess(`Welcome back, @${result.user?.username || payload.username || 'User'}!`);
-        navigate(from, { replace: true });
-      } else {
-        const msg = result.error || 'Invalid credentials. Please verify your details.';
-        setServerError(msg);
-        showError(msg);
-      }
-    } catch (err) {
-      const msg = err.response?.data?.message || 'Login failed. Please check your credentials or use a test account below.';
-      setServerError(msg);
-      showError(msg);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errors = validate();
@@ -101,26 +63,39 @@ const LoginPage = () => {
       return;
     }
 
+    setIsSubmitting(true);
+    setServerError('');
+
     const isEmail = identifier.includes('@');
     const payload = isEmail 
       ? { email: identifier.trim().toLowerCase(), password } 
       : { username: identifier.trim().toLowerCase(), password };
 
-    await executeLogin(payload);
+    try {
+      const result = await login(payload);
+
+      if (result.success) {
+        showSuccess(`Welcome back, @${result.user?.username || payload.username || 'User'}!`);
+        navigate(from, { replace: true });
+      } else {
+        const msg = result.error || 'Invalid username or password.';
+        setServerError(msg);
+        showError(msg);
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Login failed. Please check your credentials.';
+      setServerError(msg);
+      showError(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleQuickLogin = async (testAcc) => {
-    setIdentifier(testAcc.username);
-    setPassword(testAcc.password);
-    setFormErrors({});
-    setServerError('');
-
-    await executeLogin({
-      username: testAcc.username,
-      email: testAcc.email,
-      password: testAcc.password,
-    });
-  };
+  const isPendingVerification = serverError && (
+    serverError.toLowerCase().includes('not verified') ||
+    serverError.toLowerCase().includes('verify your email') ||
+    serverError.toLowerCase().includes('pending verification')
+  );
 
   return (
     <div className="px-auth">
@@ -152,49 +127,32 @@ const LoginPage = () => {
             </div>
             <h1 className="px-auth__title">Sign In to ProxAsk</h1>
             <p className="px-auth__subtitle">
-              Enter your credentials or choose a hardcoded test account to explore the entire UI/UX.
+              Enter your credentials to access your account.
             </p>
-          </div>
-
-          {/* Hardcoded Test Accounts Quick-Login Box */}
-          <div className="px-auth__demo-box">
-            <div className="px-auth__demo-header">
-              <span className="px-auth__demo-title font-mono">
-                <Sparkles size={13} className="px-auth__demo-star" /> TEST ACCOUNTS (1-CLICK LOGIN)
-              </span>
-              <span className="px-auth__demo-sub">Bypasses email verification for instant UI exploration</span>
-            </div>
-            <div className="px-auth__demo-pills">
-              {TEST_ACCOUNTS.map((acc) => (
-                <button
-                  key={acc.key}
-                  type="button"
-                  className={`px-auth__demo-pill px-auth__demo-pill--${acc.key}`}
-                  onClick={() => handleQuickLogin(acc)}
-                  disabled={isSubmitting}
-                  title={`Click to login as @${acc.username}`}
-                >
-                  <div className="px-auth__demo-pill-top">
-                    {acc.key === 'admin' ? (
-                      <ShieldCheck size={14} className="px-auth__demo-pill-icon" />
-                    ) : acc.key === 'creator' ? (
-                      <Star size={14} className="px-auth__demo-pill-icon" />
-                    ) : (
-                      <UserCheck size={14} className="px-auth__demo-pill-icon" />
-                    )}
-                    <span className="px-auth__demo-pill-label">{acc.label}</span>
-                  </div>
-                  <span className="px-auth__demo-pill-badge font-mono">{acc.badge}</span>
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* Inline Server Error Banner */}
           {serverError && (
-            <div className="px-auth__alert px-auth__alert--error">
+            <div className="px-auth__alert px-auth__alert--error" role="alert">
               <AlertCircle size={16} className="px-auth__alert-icon" />
-              <div className="px-auth__alert-text">{serverError}</div>
+              <div className="px-auth__alert-text">
+                {serverError}
+                {isPendingVerification && (
+                  <div style={{ marginTop: '8px' }}>
+                    <Link
+                      to="/verify-email"
+                      state={{ email: identifier.includes('@') ? identifier.trim() : '' }}
+                      style={{
+                        color: 'var(--brand-primary, #0D6731)',
+                        fontWeight: 600,
+                        textDecoration: 'underline'
+                      }}
+                    >
+                      Click here to enter your verification code
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -208,7 +166,7 @@ const LoginPage = () => {
                 </span>
                 <input
                   type="text"
-                  placeholder="e.g. demo_user or admin"
+                  placeholder="e.g. alex_creator or user@example.com"
                   value={identifier}
                   onChange={(e) => {
                     setIdentifier(e.target.value);

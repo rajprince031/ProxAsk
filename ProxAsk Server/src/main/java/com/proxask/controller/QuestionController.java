@@ -19,7 +19,7 @@ public class QuestionController {
 
     private final QuestionService questionService;
 
-    @PostMapping({"/ask/{username}", "/api/questions/{username}"})
+    @PostMapping({"/ask/{username}", "/api/ask/{username}", "/api/questions/{username}"})
     public ResponseEntity<ApiResponse<QuestionDTO>> postQuestionToUser(
             @RequestBody QuestionDTO question,
             @PathVariable String username) {
@@ -37,7 +37,7 @@ public class QuestionController {
         return ResponseEntity.status(201).body(new ApiResponse<>(true, "Question posted successfully", questionDTO));
     }
 
-    @GetMapping({"/ask/{username}", "/api/questions/user/{username}"})
+    @GetMapping({"/ask/{username}", "/api/ask/{username}", "/api/questions/user/{username}"})
     public ResponseEntity<ApiResponse<List<QuestionDTO>>> getAllQuestionByUser(@PathVariable String username) {
         List<QuestionDTO> questionDTOList = questionService.getQuestionsByUser(username);
         return ResponseEntity.ok(new ApiResponse<>(true, "Questions retrieved", questionDTOList));
@@ -50,7 +50,7 @@ public class QuestionController {
     }
 
     @PreAuthorize("@isAuth.hasQuestionPermission(#questionId, authentication)")
-    @PutMapping({"/ask/{questionId}/visibility", "/api/questions/{questionId}/visibility"})
+    @PutMapping({"/ask/{questionId}/visibility", "/api/ask/{questionId}/visibility", "/api/questions/{questionId}/visibility"})
     public ResponseEntity<ApiResponse<QuestionDTO>> updateQuestionVisibility(
             @PathVariable String questionId,
             @RequestBody Map<String, String> body,
@@ -62,7 +62,7 @@ public class QuestionController {
     }
 
     @PreAuthorize("@isAuth.hasQuestionPermission(#questionId, authentication)")
-    @DeleteMapping({"/ask/{questionId}", "/api/questions/{questionId}"})
+    @DeleteMapping({"/ask/{questionId}", "/api/ask/{questionId}", "/api/questions/{questionId}"})
     public ResponseEntity<ApiResponse<QuestionDTO>> deleteQuestion(
             @PathVariable String questionId,
             Authentication authentication) {

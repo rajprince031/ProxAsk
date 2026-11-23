@@ -43,9 +43,17 @@ public class SecurityConfig {
                 .authorizeHttpRequests(req -> req
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/", "/health-check", "/error").permitAll()
-                        .requestMatchers("/login", "/register", "/auth/**", "/api/auth/**").permitAll()
+                        .requestMatchers("/auth/sessions/**", "/api/auth/sessions/**").authenticated()
+                        .requestMatchers("/login", "/register",
+                                "/auth/login", "/api/auth/login",
+                                "/auth/register", "/api/auth/register",
+                                "/auth/refresh-token", "/api/auth/refresh-token", "/auth/refresh", "/api/auth/refresh",
+                                "/auth/forgot-password", "/api/auth/forgot-password",
+                                "/auth/reset-password", "/api/auth/reset-password",
+                                "/auth/resend-verification", "/api/auth/resend-verification").permitAll()
+                        .requestMatchers("/auth/**", "/api/auth/**").permitAll()
                         .requestMatchers("/verify/**", "/api/verify/**").permitAll()
-                        .requestMatchers("/ask/**", "/questions/**", "/api/questions/**").permitAll()
+                        .requestMatchers("/ask/**", "/api/ask/**", "/questions/**", "/api/questions/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/user/**", "/api/user/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/follower/**", "/followers/**", "/following/**", "/api/follower/**", "/api/followers/**", "/api/following/**", "/follow/status/**", "/api/follow/status/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/answer/**", "/api/answer/**", "/api/answers/**").permitAll()
@@ -66,7 +74,7 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
-        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Disposition"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Disposition", "Set-Cookie"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

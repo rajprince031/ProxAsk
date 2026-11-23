@@ -11,11 +11,15 @@ import {
   Eye,
   EyeOff,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Laptop,
+  Smartphone,
+  Monitor,
+  RefreshCw
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
-import api from '../service/AuthService';
+import api, { authService } from '../service/AuthService';
 import dialogService from '../service/dialogService';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
@@ -64,6 +68,77 @@ const SettingsPage = () => {
       return () => clearTimeout(timer);
     }
   }, [emailCooldown]);
+
+  // Active Sessions State
+  const [sessions, setSessions] = useState([]);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+  const [isRevokingOther, setIsRevokingOther] = useState(false);
+
+  const loadSessions = async () => {
+    setIsLoadingSessions(true);
+    try {
+      const list = await authService.getActiveSessions();
+      setSessions(Array.isArray(list) ? list : []);
+    } catch {
+      // offline or unauthenticated fallback
+    } finally {
+      setIsLoadingSessions(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSessions();
+  }, []);
+
+  const handleRevokeSession = async (sessionId, deviceInfo) => {
+    const confirmed = await dialogService.confirmAction({
+      title: 'Revoke Session',
+      text: `Are you sure you want to revoke access for "${deviceInfo || 'this device'}"? That device will be signed out immediately.`,
+      confirmText: 'Revoke Session',
+      isDestructive: true
+    });
+    if (confirmed) {
+      try {
+        await authService.revokeSession(sessionId);
+        showSuccess('Session revoked successfully.');
+        await loadSessions();
+      } catch (err) {
+        showError(err.response?.data?.message || 'Failed to revoke session.');
+      }
+    }
+  };
+
+  const handleRevokeAllOtherSessions = async () => {
+    const confirmed = await dialogService.confirmAction({
+      title: 'Log Out Other Devices',
+      text: 'Are you sure you want to log out of all other devices? All other active sessions will be terminated immediately.',
+      confirmText: 'Log Out All Other Devices',
+      isDestructive: true
+    });
+    if (confirmed) {
+      setIsRevokingOther(true);
+      try {
+        await authService.revokeOtherSessions();
+        showSuccess('All other sessions have been logged out.');
+        await loadSessions();
+      } catch (err) {
+        showError(err.response?.data?.message || 'Failed to log out other sessions.');
+      } finally {
+        setIsRevokingOther(false);
+      }
+    }
+  };
+
+  const getDeviceIcon = (deviceInfo = '') => {
+    const lower = String(deviceInfo).toLowerCase();
+    if (lower.includes('ios') || lower.includes('android') || lower.includes('mobile')) {
+      return <Smartphone size={18} />;
+    }
+    if (lower.includes('macos') || lower.includes('windows') || lower.includes('linux')) {
+      return <Laptop size={18} />;
+    }
+    return <Monitor size={18} />;
+  };
 
   // Handle Privacy Toggle (with batch request acceptance if moving Private -> Public)
   const handleTogglePrivacy = async (checked) => {
@@ -374,10 +449,101 @@ const SettingsPage = () => {
           </div>
         </Card>
 
-        {/* Session / Logout */}
+        {/* Active Devices & Session Management Dashboard */}
+        <Card className="px-settings__card">
+          <div className="px-settings__card-header" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+            <div>
+              <div className="px-settings__card-title-row">
+                <Laptop size={16} />
+                <h2 className="px-settings__card-title">Active Devices &amp; Sessions</h2>
+              </div>
+              <p className="px-settings__card-desc">
+                Review devices currently logged into your account. Revoke unfamiliar devices to secure your account.
+              </p>
+            </div>
+            {sessions.filter(s => !s.isCurrentSession).length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRevokeAllOtherSessions}
+                isLoading={isRevokingOther}
+                style={{ color: 'var(--danger)', borderColor: 'rgba(209, 36, 47, 0.3)', whiteSpace: 'nowrap' }}
+              >
+                Log Out Other Devices
+              </Button>
+            )}
+          </div>
+
+          <div className="px-settings__sessions-list">
+            {isLoadingSessions && sessions.length === 0 ? (
+              <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
+                <RefreshCw size={16} className="spin" style={{ display: 'inline', marginRight: '6px' }} />
+                Loading active devices...
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className="px-settings__session-item px-settings__session-item--current">
+                <div className="px-settings__session-info">
+                  <div className="px-settings__session-icon">
+                    <Laptop size={18} />
+                  </div>
+                  <div className="px-settings__session-details">
+                    <div className="px-settings__session-device-row">
+                      <span className="px-settings__session-device">Current Browser Session</span>
+                      <Badge variant="teal" size="sm">THIS DEVICE</Badge>
+                    </div>
+                    <span className="px-settings__session-meta">Active now</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              sessions.map((session) => (
+                <div
+                  key={session.sessionId}
+                  className={`px-settings__session-item ${session.isCurrentSession ? 'px-settings__session-item--current' : ''}`}
+                >
+                  <div className="px-settings__session-info">
+                    <div className="px-settings__session-icon">
+                      {getDeviceIcon(session.deviceInfo)}
+                    </div>
+                    <div className="px-settings__session-details">
+                      <div className="px-settings__session-device-row">
+                        <span className="px-settings__session-device">
+                          {session.deviceInfo || 'Web Browser'}
+                        </span>
+                        {session.isCurrentSession && (
+                          <Badge variant="teal" size="sm">THIS DEVICE</Badge>
+                        )}
+                      </div>
+                      <span className="px-settings__session-meta">
+                        <span>IP: {session.ipAddress || '127.0.0.1'}</span>
+                        <span>•</span>
+                        <span>
+                          {session.isCurrentSession ? 'Active now' : (session.lastActiveAt ? `Last active ${new Date(session.lastActiveAt).toLocaleDateString()}` : 'Active session')}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {!session.isCurrentSession && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleRevokeSession(session.sessionId, session.deviceInfo)}
+                      style={{ color: 'var(--danger)', fontSize: '12px', padding: '4px 10px' }}
+                    >
+                      Revoke
+                    </Button>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+
+        {/* Sign Out Card */}
         <Card className="px-settings__card px-settings__danger-card">
           <div className="px-settings__card-header">
-            <h2 className="px-settings__card-title">Session Management</h2>
+            <h2 className="px-settings__card-title">Sign Out</h2>
             <p className="px-settings__card-desc">
               Log out of your current session on this browser.
             </p>
@@ -387,7 +553,7 @@ const SettingsPage = () => {
             <div>
               <span className="px-settings__danger-title">Sign Out of ProxAsk</span>
               <p className="px-settings__danger-desc">
-                Your authentication token will be removed from this device.
+                Your authentication tokens and session will be securely cleared.
               </p>
             </div>
             <Button

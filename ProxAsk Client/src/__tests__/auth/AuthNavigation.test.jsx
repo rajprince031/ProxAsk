@@ -60,7 +60,7 @@ describe('Auth Navigation — Signup and Login Bidirectional Routing', () => {
     // Verify transitioned to Login page cleanly
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /sign in to proxask/i })).toBeDefined();
-      expect(screen.getByPlaceholderText('e.g. demo_user or admin')).toBeDefined();
+      expect(screen.getByPlaceholderText(/alex_creator|demo_user/i)).toBeDefined();
     });
   });
 

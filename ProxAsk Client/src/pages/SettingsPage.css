@@ -259,3 +259,75 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Active Sessions & Devices */
+.px-settings__sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.px-settings__session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background-color: var(--bg-muted);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  gap: 12px;
+}
+
+.px-settings__session-item--current {
+  border-color: var(--brand-primary);
+  background-color: rgba(13, 103, 49, 0.04);
+}
+
+.px-settings__session-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.px-settings__session-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.px-settings__session-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.px-settings__session-device-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.px-settings__session-device {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.px-settings__session-meta {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
